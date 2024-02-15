@@ -1,0 +1,24 @@
+---
+title: "Pink Tax Spain"
+author: "Phong Duong, Nienke Visscher"
+date: "2024-02-15"
+output: html_document
+---
+
+# Library
+
+```{r}
+
+```
+
+# Mercadona
+
+```{r}
+
+```
+
+# Clarel
+
+```{r}
+
+```
