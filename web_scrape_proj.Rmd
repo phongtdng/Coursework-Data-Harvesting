@@ -8,7 +8,12 @@ output: html_document
 # Library
 
 ```{r}
-
+library(xml2)
+library(httr)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(scrapex)
 ```
 
 # Mercadona
@@ -19,6 +24,39 @@ output: html_document
 
 # Clarel
 
-```{r}
+### Data Collection
 
+```{r}
+clarel_url <- "https://www.clarel.es/es/"
+
+category_url <- read_html(clarel_url) %>% 
+  xml_find_all("//span[contains(@class, 'item_category-slide-item')]/a") %>% 
+  xml_attr("href") %>% 
+  paste0("https://www.clarel.es",.)
+```
+
+```{r}
+clarel_hombre <- category_url[str_detect(category_url,"hombre")]
+
+product_info_paths <- clarel_hombre %>%
+  read_html() %>% 
+  xml_find_all("//div[contains(@class, 'box_product-info')]")
+```
+
+```{r}
+hombre_brands <- product_info_paths %>% 
+  xml_find_all("div[contains(@class, 'product-featuredbrands')]") %>% 
+  xml_text()
+
+hombre_products <- product_info_paths %>% 
+  xml_find_all("a") %>% 
+  xml_text()
+
+hombre_prices <- product_info_paths %>% 
+  xml_find_all("div[contains(@class, 'price')]/span") %>% 
+  xml_text()
+
+hombre_df <- as_tibble(cbind(hombre_brands, hombre_products, hombre_prices))
+
+hombre_df
 ```
