@@ -53,7 +53,7 @@ hombre_products <- product_info_paths %>%
   xml_text()
 
 hombre_prices <- product_info_paths %>% 
-  xml_find_all("div[contains(@class, 'price')]/span") %>% 
+  xml_find_all("div[contains(@class, 'product-price')]/span[contains(@class,'final-price')]") %>% 
   xml_text()
 
 hombre_df <- as_tibble(cbind(hombre_brands, hombre_products, hombre_prices))
