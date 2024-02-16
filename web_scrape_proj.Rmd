@@ -14,6 +14,7 @@ library(tidyverse)
 library(sf)
 library(rnaturalearth)
 library(scrapex)
+library(RSelenium)
 ```
 
 # Mercadona
@@ -27,7 +28,19 @@ library(scrapex)
 ### Data Collection
 
 ```{r}
+driver <- rsDriver(browser = "firefox",
+                   chromever = NULL,
+                   verbose = F)
+
+remDr <- driver[["client"]]
+```
+
+#### Main Webpage
+
+```{r}
 clarel_url <- "https://www.clarel.es/es/"
+
+remDr$navigate(clarel_url)
 
 category_url <- read_html(clarel_url) %>% 
   xml_find_all("//span[contains(@class, 'item_category-slide-item')]/a") %>% 
@@ -35,15 +48,43 @@ category_url <- read_html(clarel_url) %>%
   paste0("https://www.clarel.es",.)
 ```
 
+#### Hombre page
+
 ```{r}
 clarel_hombre <- category_url[str_detect(category_url,"hombre")]
 
-product_info_paths <- clarel_hombre %>%
-  read_html() %>% 
-  xml_find_all("//div[contains(@class, 'box_product-info')]")
+remDr$navigate(clarel_hombre)
+
+#Reject cookie
+remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
+
+#Load more items
+load_all_items <- function() {
+  tryCatch(
+    {
+      suppressMessages({
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                          "//button[contains(@class, 'load-more-items-button')]")
+      while(load_more_button$isElementDisplayed()[[1]]) {
+      load_more_button$clickElement()
+      Sys.sleep(3.5)
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                           "//button[contains(@class, 'load-more-items-button')]")
+      }
+      })
+    },
+    error = function(e){})
+}
+
+load_all_items()
 ```
 
 ```{r}
+#Get all product info
+product_info_paths <- 
+  read_html(remDr$getPageSource()[[1]]) %>% 
+  xml_find_all("//div[contains(@class, 'box_product-info')]")
+
 get_product_info <- function(path) {
   brand <- path %>% 
     xml_find_all("div[contains(@class, 'product-featuredbrands')]") %>%
