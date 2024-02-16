@@ -12,7 +12,6 @@ library(xml2)
 library(httr)
 library(tidyverse)
 library(sf)
-library(rnaturalearth)
 library(scrapex)
 library(RSelenium)
 ```
