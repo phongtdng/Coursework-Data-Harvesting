@@ -44,19 +44,27 @@ product_info_paths <- clarel_hombre %>%
 ```
 
 ```{r}
-hombre_brands <- product_info_paths %>% 
-  xml_find_all("div[contains(@class, 'product-featuredbrands')]") %>% 
-  xml_text()
+get_product_info <- function(path) {
+  brand <- path %>% 
+    xml_find_all("div[contains(@class, 'product-featuredbrands')]") %>%
+    xml_text()
+  
+  product_name <- path %>% 
+    xml_find_all("a") %>% 
+    xml_text()
+  
+  price <- path %>% 
+    xml_find_all("div[contains(@class, 'product-price')]/span[contains(@class,'final-price')]") %>% 
+    xml_text()
+  
+  data.frame(
+    brand = brand,
+    product_name = product_name,
+    price = price
+  )
+}
 
-hombre_products <- product_info_paths %>% 
-  xml_find_all("a") %>% 
-  xml_text()
+hombre_products <- map_dfr(product_info_paths, get_product_info)
 
-hombre_prices <- product_info_paths %>% 
-  xml_find_all("div[contains(@class, 'product-price')]/span[contains(@class,'final-price')]") %>% 
-  xml_text()
-
-hombre_df <- as_tibble(cbind(hombre_brands, hombre_products, hombre_prices))
-
-hombre_df
+hombre_products
 ```
