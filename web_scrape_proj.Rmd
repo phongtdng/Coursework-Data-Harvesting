@@ -50,7 +50,7 @@ category_url <- read_html(clarel_url) %>%
   paste0("https://www.clarel.es",.)
 ```
 
-#### Hombre page
+#### Scrape Hombre page
 
 ```{r}
 clarel_hombre <- category_url[str_detect(category_url,"hombre")]
@@ -59,6 +59,7 @@ remDr$navigate(clarel_hombre)
 
 #Load more items
 load_all_items <- function() {
+  Sys.sleep(3.5)
   tryCatch(
     {
       suppressMessages({
@@ -104,58 +105,36 @@ get_product_info <- function(path) {
   )
 }
 
-hombre_products <- map_dfr(product_info_paths, get_product_info)
+hombre_products <- map_dfr(product_info_paths, get_product_info) %>% 
+  mutate("category" = "hombre")
 
 hombre_products
-
-# write_csv(hombre_products, "datasets\\hombre.csv")
 ```
 
-#### Higiene page
+#### Scrape Multiple Categories
 
 ```{r}
-clarel_higiene <- category_url[str_detect(category_url,"higiene")]
+imp_cat <- c("hombre", "higiene", "cabello")
 
-remDr$navigate(clarel_higiene)
+scrape_all <- function(category) {
+  cat <- category_url[str_detect(category_url, category)]
+  
+  remDr$navigate(cat)
+  
+  Sys.sleep(5)
+  
+  load_all_items()
+  
+  product_info_paths <- read_html(remDr$getPageSource()[[1]]) %>% 
+    xml_find_all("//div[contains(@class, 'box_product-info')]")
 
-load_all_items()
-```
+  df <- map_dfr(product_info_paths, get_product_info) %>% 
+    mutate("category" = category)
+  
+  return(df)
+}
 
-```{r}
-product_info_paths <- 
-  read_html(remDr$getPageSource()[[1]]) %>% 
-  xml_find_all("//div[contains(@class, 'box_product-info')]")
+all_products_clarel <- map_dfr(imp_cat ,scrape_all)
 
-higiene_products <- map_dfr(product_info_paths, get_product_info)
-
-higiene_products
-```
-
-```{r}
-# #Save into a csv file to avoid scrape every time
-# write_csv(higiene_products, "datasets\\higiene.csv")
-```
-
-#### Cabello page
-
-```{r}
-clarel_cabello <- category_url[str_detect(category_url,"cabello")]
-
-remDr$navigate(clarel_cabello)
-
-load_all_items()
-```
-
-```{r}
-product_info_paths <- 
-  read_html(remDr$getPageSource()[[1]]) %>% 
-  xml_find_all("//div[contains(@class, 'box_product-info')]")
-
-cabello_products <- map_dfr(product_info_paths, get_product_info)
-
-cabello_products
-```
-
-```{r}
-# write_csv(higiene_products, "datasets\\cabello.csv")
+write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
