@@ -107,9 +107,11 @@ get_product_info <- function(path) {
 hombre_products <- map_dfr(product_info_paths, get_product_info)
 
 hombre_products
+
+# write_csv(hombre_products, "datasets\\hombre.csv")
 ```
 
-#### Higiene Page
+#### Higiene page
 
 ```{r}
 clarel_higiene <- category_url[str_detect(category_url,"higiene")]
@@ -132,4 +134,28 @@ higiene_products
 ```{r}
 # #Save into a csv file to avoid scrape every time
 # write_csv(higiene_products, "datasets\\higiene.csv")
+```
+
+#### Cabello page
+
+```{r}
+clarel_cabello <- category_url[str_detect(category_url,"cabello")]
+
+remDr$navigate(clarel_cabello)
+
+load_all_items()
+```
+
+```{r}
+product_info_paths <- 
+  read_html(remDr$getPageSource()[[1]]) %>% 
+  xml_find_all("//div[contains(@class, 'box_product-info')]")
+
+cabello_products <- map_dfr(product_info_paths, get_product_info)
+
+cabello_products
+```
+
+```{r}
+# write_csv(higiene_products, "datasets\\cabello.csv")
 ```
