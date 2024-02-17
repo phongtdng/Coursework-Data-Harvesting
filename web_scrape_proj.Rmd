@@ -138,3 +138,15 @@ all_products_clarel <- map_dfr(imp_cat ,scrape_all)
 
 write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
+
+### Data Cleaning
+
+```{r}
+#Quantity detect
+all_products_clarel %>% 
+  as_tibble() %>% 
+  mutate(
+    quantity = str_extract(tolower(product_name), 
+                           "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l"), .after = product_name
+    ) 
+```
