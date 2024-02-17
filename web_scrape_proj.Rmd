@@ -41,6 +41,9 @@ clarel_url <- "https://www.clarel.es/es/"
 
 remDr$navigate(clarel_url)
 
+#Reject cookie
+remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
+
 category_url <- read_html(clarel_url) %>% 
   xml_find_all("//span[contains(@class, 'item_category-slide-item')]/a") %>% 
   xml_attr("href") %>% 
@@ -53,9 +56,6 @@ category_url <- read_html(clarel_url) %>%
 clarel_hombre <- category_url[str_detect(category_url,"hombre")]
 
 remDr$navigate(clarel_hombre)
-
-#Reject cookie
-remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
 
 #Load more items
 load_all_items <- function() {
@@ -107,4 +107,29 @@ get_product_info <- function(path) {
 hombre_products <- map_dfr(product_info_paths, get_product_info)
 
 hombre_products
+```
+
+#### Higiene Page
+
+```{r}
+clarel_higiene <- category_url[str_detect(category_url,"higiene")]
+
+remDr$navigate(clarel_higiene)
+
+load_all_items()
+```
+
+```{r}
+product_info_paths <- 
+  read_html(remDr$getPageSource()[[1]]) %>% 
+  xml_find_all("//div[contains(@class, 'box_product-info')]")
+
+higiene_products <- map_dfr(product_info_paths, get_product_info)
+
+higiene_products
+```
+
+```{r}
+# #Save into a csv file to avoid scrape every time
+# write_csv(higiene_products, "datasets\\higiene.csv")
 ```
