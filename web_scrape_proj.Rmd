@@ -14,6 +14,7 @@ library(tidyverse)
 library(sf)
 library(scrapex)
 library(RSelenium)
+library(glue)
 ```
 
 # Mercadona
@@ -41,22 +42,28 @@ clarel_url <- "https://www.clarel.es/es/"
 
 remDr$navigate(clarel_url)
 
+Sys.sleep(4)
+
 #Reject cookie
 remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
-
-category_url <- read_html(clarel_url) %>% 
-  xml_find_all("//span[contains(@class, 'item_category-slide-item')]/a") %>% 
-  xml_attr("href") %>% 
-  paste0("https://www.clarel.es",.)
 ```
 
-#### Scrape Hombre page
+#### Scrape Hombre Category
 
 ```{r}
-clarel_hombre <- category_url[str_detect(category_url,"hombre")]
+get_subcat2_url <- function(category){
+  remDr$getPageSource()[[1]] %>% 
+    read_html() %>% 
+    xml_find_all(glue("//span[a[contains(text(),'{category}')]]//li/a[contains(@class,'item')]")) %>% 
+    xml_attr("href") %>% 
+    paste0("https://www.clarel.es",.)
+}
+sub_cat_2_url <- get_subcat2_url("Hombre")
 
-remDr$navigate(clarel_hombre)
+remDr$navigate(sub_cat_2_url[10])
+```
 
+```{r}
 #Load more items
 load_all_items <- function() {
   Sys.sleep(3.5)
@@ -76,16 +83,20 @@ load_all_items <- function() {
     error = function(e){})
 }
 
-load_all_items()
+# load_all_items()
 ```
 
 ```{r}
 #Get all product info
-product_info_paths <- 
-  read_html(remDr$getPageSource()[[1]]) %>% 
+get_product_info <- function(url) {
+  remDr$navigate(url)
+  
+  load_all_items()
+  
+  paths <- read_html(remDr$getPageSource()[[1]]) %>% 
   xml_find_all("//div[contains(@class, 'box_product-info')]")
-
-get_product_info <- function(path) {
+  
+  get_info <- function(path) {
   brand <- path %>% 
     xml_find_all("div[contains(@class, 'product-featuredbrands')]") %>%
     xml_text()
@@ -103,10 +114,23 @@ get_product_info <- function(path) {
     product_name = product_name,
     price = price
   )
+  }
+  
+  #Get cat & subcats
+  cat <- remDr$getPageSource()[[1]] %>% 
+    read_html() %>% 
+    xml_find_all("//span[@class='subcategory']") %>% 
+    xml_text() %>% 
+    paste(collapse = ",")
+  
+  df <- map_dfr(paths, get_info) %>% mutate(full_cat = cat)
+
+  
+  return(df)
 }
 
-hombre_products <- map_dfr(product_info_paths, get_product_info) %>% 
-  mutate("category" = "hombre")
+
+hombre_products <- map_dfr(sub_cat_2_url, get_product_info)
 
 hombre_products
 ```
@@ -114,27 +138,21 @@ hombre_products
 #### Scrape Multiple Categories
 
 ```{r}
-imp_cat <- c("hombre", "higiene", "cabello")
+imp_cat <- c("Hombre", "Higiene", "Cabello")
 
 scrape_all <- function(category) {
-  cat <- category_url[str_detect(category_url, category)]
+  remDr$navigate(clarel_url)
   
-  remDr$navigate(cat)
+  subcat2 <- get_subcat2_url(category)
   
-  Sys.sleep(5)
-  
-  load_all_items()
-  
-  product_info_paths <- read_html(remDr$getPageSource()[[1]]) %>% 
-    xml_find_all("//div[contains(@class, 'box_product-info')]")
-
-  df <- map_dfr(product_info_paths, get_product_info) %>% 
-    mutate("category" = category)
+  df <- map_dfr(subcat2, get_product_info) 
   
   return(df)
 }
 
+start <- Sys.time()
 all_products_clarel <- map_dfr(imp_cat ,scrape_all)
+stop <- Sys.time()
 
 write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
@@ -142,6 +160,8 @@ write_csv(all_products_clarel, "datasets/clarel.csv")
 ### Data Cleaning
 
 ```{r}
+all_products_clarel <- read_csv("datasets/clarel.csv")
+
 #Quantity detect
 all_products_clarel %>% 
   as_tibble() %>% 
