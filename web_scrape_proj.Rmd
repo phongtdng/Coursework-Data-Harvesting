@@ -9,10 +9,7 @@ output: html_document
 
 ```{r}
 library(xml2)
-library(httr)
 library(tidyverse)
-library(sf)
-library(scrapex)
 library(RSelenium)
 library(glue)
 ```
