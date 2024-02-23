@@ -118,7 +118,7 @@ get_product_info <- function(url) {
     read_html() %>% 
     xml_find_all("//span[@class='subcategory']") %>% 
     xml_text() %>% 
-    paste(collapse = ",")
+    paste(collapse = "-")
   
   df <- map_dfr(paths, get_info) %>% mutate(full_cat = cat)
 
@@ -162,8 +162,11 @@ all_products_clarel <- read_csv("datasets/clarel.csv")
 #Quantity detect
 all_products_clarel %>% 
   as_tibble() %>% 
-  mutate(
-    quantity = str_extract(tolower(product_name), 
-                           "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l"), .after = product_name
-    ) 
+  distinct(product_name, .keep_all = TRUE) %>% 
+  mutate(quantity = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
+  mutate(quantity = replace_na(quantity, "1")) %>% 
+  separate_wider_delim(full_cat, delim = "-", names = c("category", "sub_category", "product_type"))
 ```
+
+\
+\
