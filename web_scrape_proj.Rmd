@@ -31,9 +31,9 @@ set_config(
 )
 
 #Code for attaching JAVA
-Sys.getenv("JAVA_HOME")
-Sys.setenv(JAVA_HOME = "C:/Program Files/Common Files/Oracle/Java/javapath/java.exe")
-Sys.getenv("PATH")
+#Sys.getenv("JAVA_HOME")
+#Sys.setenv(JAVA_HOME = "C:/Program Files/Common Files/Oracle/Java/javapath/java.exe")
+#Sys.getenv("PATH")
 #install.packages("RSelenium", dependencies = TRUE)
 
 #Opening hidden browser
@@ -44,23 +44,16 @@ merc_1 <- "https://tienda.mercadona.es/product/35420/acondicionador-suavidad-bri
 
 browseURL(prep_browser(merc))
 
-remDr$client$navigate(prep_browser(merc_1))
- 
+remDr$client$navigate(merc)
 
-merc |> 
-  read_html () 
+merc <-remDr$client$getPageSource()[[1]] |> 
+  read_html() |> 
+  xml_find_all("//div")
 
-merc |> 
-  xml_find_all("//div[@data-test='product-cell']")
 
-merc |> 
-  xml_find_all("//*//div[@data-test='product-cell']") 
-  
-merc |> 
-  xml_find_all("//*/div[@class='product_cell-info']/h4[@class='subhead1-r product-cell_description-name]") 
-  
-merc |> 
-  xml_find_all("//div//*[@class='product_cell-info']") 
+//*[@id="root"]/div[2]/div[2]/div[1]/div/div/section[1]/div/div[1]/button/div[2]
+remDr$client$findElement(using = "xpath", "//div[contains(@class, 'product-cell')]")  
+
 
 
 ```
