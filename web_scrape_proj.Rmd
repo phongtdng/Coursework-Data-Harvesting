@@ -3,6 +3,8 @@ title: "Pink Tax Spain"
 author: "Phong Duong, Nienke Visscher"
 date: "2024-02-15"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Library
@@ -37,29 +39,233 @@ set_config(
 #install.packages("RSelenium", dependencies = TRUE)
 
 #Opening hidden browser
-remDr <- rsDriver(port = 4450L, browser = "firefox",  verbose=F, chromever = NULL)
+remDr <- rsDriver(port = 4458L, browser = "firefox",  verbose=F, chromever = NULL)
+
 
 merc <-"https://tienda.mercadona.es/categories"
-merc_1 <- "https://tienda.mercadona.es/product/35420/acondicionador-suavidad-brillo-deliplus-tipo-cabello-con-queratina-botella"
 
 browseURL(prep_browser(merc))
-
+ 
 remDr$client$navigate(merc)
 
-merc <-remDr$client$getPageSource()[[1]] |> 
-  read_html() |> 
-  xml_find_all("//div")
+
+```
+
+```{r}
+
+driver <- remDr$client
 
 
-//*[@id="root"]/div[2]/div[2]/div[1]/div/div/section[1]/div/div[1]/button/div[2]
-remDr$client$findElement(using = "xpath", "//div[contains(@class, 'product-cell')]")  
+#Note following only when having newly initiated the port
+#Accepting cookies
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--small ui-button--tertiary ui-button--positive'])[1]")$clickElement()
+
+#Click on text box
+driver$findElement(value = "(//input[@class = 'ym-hide-content'])[1]")$clickElement()
+
+#Define findElement of the textbox
+codigo <-driver$findElement(value = "(//input[@class = 'ym-hide-content'])[1]")
+
+#Fill in the text box
+codigo$sendKeysToElement(list("28014"))
+
+#Click 
+driver$findElement(value = "(//button[@class = 'button button-primary button-big'])[1]")$clickElement()
+
+##### Util here
+
+#Get URLs
+
+#Click on Cuidado del cabello
+driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado del cabello')])[1]")$clickElement()
+
+url_1.1 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_1.2 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_1.3 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_1.4 <-driver$getCurrentUrl()
+
+
+#Click on Cuidado facial y corporal
+driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado facial y corporal')])[1]")$clickElement()
+
+url_2.1 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.2 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.3 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.4 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.5 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.6 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.7 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.8 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.9 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.10 <-driver$getCurrentUrl()
+
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+
+url_2.11 <-driver$getCurrentUrl()
+
+
+total_url <-rbind(url_1.1, url_1.2, url_1.3, url_1.4, url_2.1, url_2.2, url_2.3, url_2.4, url_2.5, url_2.6, url_2.7, url_2.8, url_2.9, url_2.10, url_2.11)
+
+total_url_list <-list(url_1.1, url_1.2, url_1.3, url_1.4, url_2.1, url_2.2, url_2.3, url_2.4, url_2.5, url_2.6, url_2.7, url_2.8, url_2.9, url_2.10, url_2.11)
+
+total_url_ul <-unlist(total_url_list)
+
+
+
+url <- total_url_ul[4]
+
+```
+
+```{r}
+driver$navigate(try)
+
+
+cat_html <-driver$getPageSource()[[1]] |>
+  read_html() 
+
+cat_html
+
+
+cat_info <- cat_html|> 
+    xml_find_all("//*[@id='root']//button/div[2]") |>
+    xml_text()
+
+cat_info
+
+cat_clean<-cat_info|> 
+   str_replace_all("ml|€|/ud|L|\\.", "") |> 
+   strsplit("\\s(?=\\d)", perl = TRUE)
+```
+
+```{r}
+
+
+cat_grabber <- function(total_url_ul){
+  
+Sys.sleep(2)
+
+driver$navigate(total_url_ul)
+
+cat_html <-driver$getPageSource()[[1]] |>
+  read_html() 
+
+cat_info <- cat_html|> 
+    xml_find_all("//*[@id='root']//button/div[2]") |>
+    xml_text()
+
+at_clean<-cat_info|> 
+  str_replace_all("\\€ |/|\\.", "") |> 
+  strsplit("\\s(?=\\d+\\s*ud)|\\.*ud|\\s(?=\\d+\\s*ml)|ml", perl = TRUE) 
+
+cat_clean_filter<- cat_clean[lengths(cat_clean) <= 3]
+
+data.frame(
+  name = sapply(cat_clean_filter, `[`, 1),
+  quantity = sapply(cat_clean_filter, `[`, 2),
+  price = sapply(cat_clean_filter, `[`, 3),
+  stringsAsFactors = FALSE
+)
+
+
+}
+
+cat_grabber(total_url_ul)
+
+
+final <- map_dfr(total_url_ul, cat_grabber) 
+
+total_url_ul
+```
+
+```{r}
+
+driver$navigate(total_url_ul[3])
+
+cat_html <-driver$getPageSource()[[1]] |>
+  read_html() 
+
+cat_info <- cat_html|> 
+    xml_find_all("//*[@id='root']//button/div[2]") |>
+    xml_text()
+
+cat_info
+
+cat_clean<-cat_info|> 
+  str_replace_all("\\€ |/|\\.", "") |> 
+  strsplit("\\s(?=\\d+\\s*ud)|\\.*ud|\\s(?=\\d+\\s*ml)|ml|L", perl = TRUE) 
+cat_clean
+
+cat_clean_filter<- cat_clean[lengths(cat_clean) <= 3]
+
+data.frame(
+  name = sapply(cat_clean_filter, `[`, 1),
+  quantity = sapply(cat_clean_filter, `[`, 2),
+  price = sapply(cat_clean_filter, `[`, 3),
+  stringsAsFactors = FALSE
+)
+
+
+```
+
+```{r}
+
 
 
 
 ```
 
-## Clarel
+```{r}
+
+
+
+```
 
 ```{r}
+
+```
+
+## deleted
+
+```{r}
+
+cat_clean<-cat_info|> 
+   str_replace_all("ml|€|/ud|L|\\.", "") |> 
+   strsplit("\\s(?=\\d)", perl = TRUE)
 
 ```
