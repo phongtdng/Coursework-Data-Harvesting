@@ -12,6 +12,7 @@ library(xml2)
 library(tidyverse)
 library(RSelenium)
 library(glue)
+library(readr)
 ```
 
 # Mercadona
@@ -158,14 +159,29 @@ write_csv(all_products_clarel, "datasets/clarel.csv")
 
 ```{r}
 all_products_clarel <- read_csv("datasets/clarel.csv")
+```
 
+```{r}
 #Quantity detect
-all_products_clarel %>% 
+cleaned_clarel <- all_products_clarel %>% 
   as_tibble() %>% 
   distinct(product_name, .keep_all = TRUE) %>% 
-  mutate(quantity = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
-  mutate(quantity = replace_na(quantity, "1")) %>% 
-  separate_wider_delim(full_cat, delim = "-", names = c("category", "sub_category", "product_type"))
+  separate_wider_delim(full_cat, delim = "-", names = c("category", "sub_category", "product_type")) %>% 
+  mutate(qty = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
+  mutate(qty = replace_na(qty, "1")) %>% 
+  mutate(price = parse_number(str_replace(price, "€", ""), locale = locale(decimal_mark = ","))) %>% 
+  mutate(
+    avg_price = case_when(
+      str_detect(qty, "\\d+ ?ml|\\d+ ?g") ~ price * 100 / as.numeric(str_extract(qty, "\\d+")), #price per 100ml/g
+      str_detect(qty, "\\d+ ?u(ds)?") ~ price / as.numeric(str_extract(qty, "\\d+")), #price per unit
+      str_detect(qty, "\\d+(,\\d+)? ?l") ~ price *0.1 / parse_number(str_extract(qty, "\\d+(,\\d+)? ?l"), locale = locale(decimal_mark = ",")), #price per 100ml for Litters
+      TRUE ~ price 
+    )
+  ) %>% 
+  mutate(avg_price = round(avg_price, 2))
+  
+
+cleaned_clarel
 ```
 
 \
