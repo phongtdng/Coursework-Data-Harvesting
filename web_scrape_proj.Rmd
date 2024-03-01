@@ -5,23 +5,52 @@ date: "2024-02-15"
 output: html_document
 ---
 
-# Library
+## Library
 
 ```{r}
 library(xml2)
 library(tidyverse)
 library(RSelenium)
 library(glue)
-library(readr)
+library(magrittr)
 ```
 
-# Mercadona
+## Mercadona
 
 ```{r}
+set_config(
+  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Nienke Visscher / nienvis@gmail.com")
+)
+
+#Code for attaching JAVA
+#Sys.getenv("JAVA_HOME")
+#Sys.setenv(JAVA_HOME = "C:/Program Files/Common Files/Oracle/Java/javapath/java.exe")
+#Sys.getenv("PATH")
+#install.packages("RSelenium", dependencies = TRUE)
+
+#Opening hidden browser
+remDr <- rsDriver(port = 4450L, browser = "firefox",  verbose=F, chromever = NULL)
+
+merc <-"https://tienda.mercadona.es/categories"
+merc_1 <- "https://tienda.mercadona.es/product/35420/acondicionador-suavidad-brillo-deliplus-tipo-cabello-con-queratina-botella"
+
+browseURL(prep_browser(merc))
+
+remDr$client$navigate(merc)
+
+merc <-remDr$client$getPageSource()[[1]] |> 
+  read_html() |> 
+  xml_find_all("//div")
+
+
+//*[@id="root"]/div[2]/div[2]/div[1]/div/div/section[1]/div/div[1]/button/div[2]
+remDr$client$findElement(using = "xpath", "//div[contains(@class, 'product-cell')]")  
+
+
 
 ```
 
-# Clarel
+## Clarel
 
 ### Data Collection
 
