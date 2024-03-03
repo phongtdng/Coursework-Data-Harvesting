@@ -15,9 +15,18 @@ library(tidyverse)
 library(RSelenium)
 library(glue)
 library(magrittr)
+library(httr)
+library(sf)
+library(rnaturalearth)
+library(scrapex)
+library(lubridate)
+library(dplyr)
+library(tidyr)
 ```
 
 ## Mercadona
+
+### Setting up RSelenium
 
 ```{r}
 set_config(
@@ -31,7 +40,7 @@ set_config(
 #install.packages("RSelenium", dependencies = TRUE)
 
 #Opening hidden browser
-remDr <- rsDriver(port = 4462L, browser = "firefox",  verbose=F, chromever = NULL)
+remDr <- rsDriver(port = 4463L, browser = "firefox",  verbose=F, chromever = NULL)
 
 
 merc <-"https://tienda.mercadona.es/categories"
@@ -43,6 +52,7 @@ remDr$client$navigate(merc)
 
 ```
 
+#Obtaining URLs
 ```{r}
 
 driver <- remDr$client
@@ -66,22 +76,21 @@ driver$findElement(value = "(//button[@class = 'button button-primary button-big
 ##### Until here
 
 
-#Insert below
-cat_name <- cat_html |> 
-   xml_find_all("//label[@class='subhead1-r']") |>
-   xml_text()
+#Get URLs 'Cuidado del cabello'
 
-
-#Get URL first categories
+#Create an empty list to store the URLs 
 url <- list()
-  
+
+#Navigate to the button 'Cuidado del cabello'
 driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado del cabello')])[1]")$clickElement()
 
+#Use system sleep to avoid code running faster than the internet
 Sys.sleep(1)
 
+#Store the first URL
 url[1] <-driver$getCurrentUrl()
 
-
+#Create a loop to click on the button at the end of the page to naviagte to the next category and save the url
 for (i in (2:4)){
   
   driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
@@ -93,7 +102,7 @@ Sys.sleep(1)
   
 }
 
-#Get URL second categories
+#Get URLs Cuidado facial y corporal
   
 driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado facial y corporal')])[1]")$clickElement()
 
@@ -114,34 +123,39 @@ for (i in (6:15)){
   
 }
 
-
+#Unlist the URL variable
 url <-unlist(url)
 
 
 ```
 
+#Scraping and cleaning data 
 ```{r}
 
-
+#Create function
 cat_grabber <- function(url){
   
-
+#Navigate to one of the URLs stored in the variable URL
 driver$navigate(url)
   
+#Use system sleep to avoid code running faster than the internet
 Sys.sleep(1)
 
+#Get the page source code and read the html
 cat_html <-driver$getPageSource()[[1]] |>
-  read_html() 
+  read_html()
 
+#Collect data on products
 cat_info <- cat_html|> 
     xml_find_all("//*[@id='root']//button/div[2]") |>
     xml_text()
 
+#Collect the sub category names
 subcat_name <- cat_html |> 
    xml_find_all("//h1[@class='category-detail__title title1-b']") |>
    xml_text()
 
-
+#Clean and separate data using regex
 cat_clean<-cat_info|> 
   str_replace_all("\\€ |/|\\.|!", "") |>
   str_replace_all("\\€\\d+,\\d+", "") |>
@@ -151,6 +165,7 @@ cat_clean<-cat_info|>
   str_replace_all("(?<=\\d\\s)L", "/L/") |> 
   str_replace_all("(?<=\\d\\s)tarro", "") |> 
   str_replace_all("(?<=\\d\\s)g\\s", "/g/") |> 
+  str_replace_all("(?<=\\d\\s)g", "/g/") |> 
   str_replace_all("(?<=\\d\\s)sobres", "/sobres/") |> 
   str_replace_all("(?<=\\d\\s)bandas", "/bandas/") |> 
   str_replace_all("(?<=sensibleCaja\\s)1", "/") |> 
@@ -163,14 +178,16 @@ cat_clean<-cat_info|>
   strsplit("/")
 
 
+#Make all variables length 5 to create NA for missing values 
 cat_clean <- lapply(cat_clean, function(x) {
   length(x) <- 5
   x
 })
 
-
+#Only keep the variables with 5 or less strings
 cat_clean<- cat_clean[lengths(cat_clean) <= 5]
 
+#Create a dataframe
 data.frame(
   name = sapply(cat_clean, `[`, 1),
   quantity = sapply(cat_clean, `[`, 2),
@@ -186,11 +203,142 @@ data.frame(
 
 cat_grabber(url)
 
-
+#Loop thhe function cat_grabber over all URLs
 final <- map_dfr(url, cat_grabber) 
 
 ```
 
+
+### Scrape and add main categories to data frame
+```{r}
+
+
+driver$navigate(url[1])
+  
+Sys.sleep(1)
+
+cat_html <-driver$getPageSource()[[1]] |>
+  read_html() 
+
+cat <- cat_html |> 
+   xml_find_all("//label[@class='subhead1-r']") |>
+   xml_text()
+
+
+final <- final |> 
+  mutate(cat_name = ifelse((subcat=="Acondicionador y mascarilla"|
+                              subcat== "Champú"|
+                              subcat== "Coloración cabello"|
+                              subcat== "Fijación cabello" ),cat[14], cat[15]))
+
+```
+
+```{r}
+#Deslect column ud bacause this column does not contain variation
+final <- final |> 
+  dplyr::select(-ud)
+```
+
+
+### Brands
+```{r}
+
+brands <- c("Deliplus", "Elvive", "Pantene", "O'lysee", 
+            "H&S", "Ultrex", "Garnier", "L'Oréal", 
+            "Schwarzkopf", "Nelly", "Giorgi", "Elnett", 
+            "Fructis", "Syoss", "Gillette", 
+            "Nivea", "Axe", "Atlantia", "Bosque Verde", 
+            "Montagne Jeunesse", "Viseger Pharma", 
+            "My Moment", "Khanya", "Veet", "Wilkinson", 
+            "Sanex", "Byly", "Tulipán Negro", "Dove", 
+            "Deonat", "Rexona", "Heno de Pravia", "960", 
+            "La Toja", "Magno", "Lactovit", "Colgate", 
+            "Oral-B", "Sensodyne", "Signal", "Parodontax", 
+            "Benfix", "Listerine", "Polident", "evax", 
+            "Ausonia", "Carefree", "Tampax", "Tena",
+            "Sense", "Classic fresh", "Rose Nude", 
+            "Elección", "Prêt à Porter", "Como Tú", 
+            "Como Tú", "Psicodelic", "Complicity", "Vuela", 
+            "Adidas", "Soplo", "Capítulo Floral", "My soul", 
+            "Blue Shine", "Verissime", "Flor de Mayo", 
+            "Monogotas", "Capítulo", "Extrait", 
+            "Mr. Wonderful", "Uahuu", "TokiDoki", "Ikiru",
+            "Chupachups", "Rose Nude", "Rouge seduction",
+            "Snoopy", "Muy mío", "Impacto", "Afán", 
+            "Springfield", "Gesto", "Sesgo", "Brummel", 
+            "Antonio Banderas", "Misty Wood", "Capítulo Marino", "Ego", 
+            "My Soul", "Jacq's", "My Soul", "Selk",
+            " Crossmen", "Gesto", "Disney", "Marvel", 
+            "Naruto", "Peppa Pig", "Sonic de Hedgehog", "Colour up!", 
+            "HoneyBotella")
+
+
+brands_or <- paste(brands, collapse = "|")
+
+final$brand <- str_extract_all(final$name, regex(brands_or, ignore_case = TRUE))
+
+```
+
+### Average prices
+```{r}
+units <- c("L", "ml", "ud", "sobres", "bandas", "g")
+
+final_1 <- final |> 
+  filter(quantity_unit %in% units) |> 
+  mutate(quantity = as.numeric(quantity),
+         price = as.numeric(price)) |> 
+  mutate(avg_price = case_when(
+    str_detect(quantity_unit, "g|ml") ~ (price/quantity)*100,
+    str_detect(quantity_unit, "L") ~ (price/quantity)/100,
+    str_detect(quantity_unit, "ud") ~ price /quantity
+    ))
+
+
+final |> 
+  distinct(quantity_unit)
+
+
+
+mutate(
+    avg_price = case_when(
+      str_detect(qty, "\\d+ ?ml|\\d+ ?g") ~ price * 100 / as.numeric(str_extract(qty, "\\d+")), #price per 100ml/g
+      str_detect(qty, "\\d+ ?u(ds)?") ~ price / as.numeric(str_extract(qty, "\\d+")), #price per unit
+      str_detect(qty, "\\d+(,\\d+)? ?l") ~ price *0.1 / parse_number(str_extract(qty, "\\d+(,\\d+)? ?l"), locale = locale(decimal_mark = ",")), #price per 100ml for Litters
+      TRUE ~ price 
+    )
+  ) %>% 
+  mutate(avg_price = round(avg_price, 2))
+
+```
+
+
+###Gender product
+```{r}
+#Vector of words indicating gender
+gender <-c("Men", "Women", "Man", "Woman", "Hombre", "Mujer", "Hombres", "Mujeres", "Him", "Her", "Niño", "Niña", "Niños", "Niñas", "Homme", "Femme", "Male", "Female", "Males", "Females", "Venus") 
+
+#Collapsing the gender vector to 
+gender_or <- paste(gender, collapse = "|")
+
+final$gender_name <-str_extract_all(final$name, regex(gender_or))
+
+# Convert 'character(0)' to 'Non-Male'
+final$gender_name[final$gender_name == "character(0)"] <- "Non-Male"
+
+male <- c("Men", "Man", "Hombre", "Hombres", "Him", "Niño", "Niños", "Homme", "Male",  "Males") 
+
+female <- c("Women", "Woman", "Mujer", "Mujeres", "Her", "Niña", "Niñas", "Femme", "Female", "Females", "Venus") 
+
+final$gender <- case_when(final$gender_name %in% male ~ "Male",
+                          final$gender_name %in% female ~ "Female",
+                          final$gender_name == "Non-Male"~ "Non-Male")
+
+```
+
+
+
+
+## Clarel
 
 ### Data Collection
 
