@@ -11,18 +11,10 @@ editor_options:
 
 ```{r}
 library(xml2)
-library(httr)
 library(tidyverse)
-library(sf)
-library(rnaturalearth)
-library(scrapex)
 library(RSelenium)
+library(glue)
 library(magrittr)
-library(lubridate)
-library(dplyr)
-library(tidyr)
-
-
 ```
 
 ## Mercadona
@@ -198,4 +190,167 @@ cat_grabber(url)
 final <- map_dfr(url, cat_grabber) 
 
 ```
+
+
+### Data Collection
+
+```{r}
+driver <- rsDriver(browser = "firefox",
+                   chromever = NULL,
+                   verbose = F)
+
+remDr <- driver[["client"]]
+```
+
+#### Main Webpage
+
+```{r}
+clarel_url <- "https://www.clarel.es/es/"
+
+remDr$navigate(clarel_url)
+
+Sys.sleep(4)
+
+#Reject cookie
+remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
+```
+
+#### Scrape Hombre Category
+
+```{r}
+get_subcat2_url <- function(category){
+  remDr$getPageSource()[[1]] %>% 
+    read_html() %>% 
+    xml_find_all(glue("//span[a[contains(text(),'{category}')]]//li/a[contains(@class,'item')]")) %>% 
+    xml_attr("href") %>% 
+    paste0("https://www.clarel.es",.)
+}
+sub_cat_2_url <- get_subcat2_url("Hombre")
+
+remDr$navigate(sub_cat_2_url[10])
+```
+
+```{r}
+#Load more items
+load_all_items <- function() {
+  Sys.sleep(3.5)
+  tryCatch(
+    {
+      suppressMessages({
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                          "//button[contains(@class, 'load-more-items-button')]")
+      while(load_more_button$isElementDisplayed()[[1]]) {
+      load_more_button$clickElement()
+      Sys.sleep(3.5)
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                           "//button[contains(@class, 'load-more-items-button')]")
+      }
+      })
+    },
+    error = function(e){})
+}
+
+# load_all_items()
+```
+
+```{r}
+#Get all product info
+get_product_info <- function(url) {
+  remDr$navigate(url)
+  
+  load_all_items()
+  
+  paths <- read_html(remDr$getPageSource()[[1]]) %>% 
+  xml_find_all("//div[contains(@class, 'box_product-info')]")
+  
+  get_info <- function(path) {
+  brand <- path %>% 
+    xml_find_all("div[contains(@class, 'product-featuredbrands')]") %>%
+    xml_text()
+  
+  product_name <- path %>% 
+    xml_find_all("a") %>% 
+    xml_text()
+  
+  price <- path %>% 
+    xml_find_all("div[contains(@class, 'product-price')]/span[contains(@class,'final-price')]") %>% 
+    xml_text()
+  
+  data.frame(
+    brand = brand,
+    product_name = product_name,
+    price = price
+  )
+  }
+  
+  #Get cat & subcats
+  cat <- remDr$getPageSource()[[1]] %>% 
+    read_html() %>% 
+    xml_find_all("//span[@class='subcategory']") %>% 
+    xml_text() %>% 
+    paste(collapse = "-")
+  
+  df <- map_dfr(paths, get_info) %>% mutate(full_cat = cat)
+
+  
+  return(df)
+}
+
+
+hombre_products <- map_dfr(sub_cat_2_url, get_product_info)
+
+hombre_products
+```
+
+#### Scrape Multiple Categories
+
+```{r}
+imp_cat <- c("Hombre", "Higiene", "Cabello")
+
+scrape_all <- function(category) {
+  remDr$navigate(clarel_url)
+  
+  subcat2 <- get_subcat2_url(category)
+  
+  df <- map_dfr(subcat2, get_product_info) 
+  
+  return(df)
+}
+
+start <- Sys.time()
+all_products_clarel <- map_dfr(imp_cat ,scrape_all)
+stop <- Sys.time()
+
+write_csv(all_products_clarel, "datasets/clarel.csv")
+```
+
+### Data Cleaning
+
+```{r}
+
+```{r}
+#Quantity detect
+cleaned_clarel <- all_products_clarel %>% 
+  as_tibble() %>% 
+  distinct(product_name, .keep_all = TRUE) %>% 
+  separate_wider_delim(full_cat, delim = "-", names = c("category", "sub_category", "product_type")) %>% 
+  mutate(qty = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
+  mutate(qty = replace_na(qty, "1")) %>% 
+  mutate(price = parse_number(str_replace(price, "€", ""), locale = locale(decimal_mark = ","))) %>% 
+  mutate(
+    avg_price = case_when(
+      str_detect(qty, "\\d+ ?ml|\\d+ ?g") ~ price * 100 / as.numeric(str_extract(qty, "\\d+")), #price per 100ml/g
+      str_detect(qty, "\\d+ ?u(ds)?") ~ price / as.numeric(str_extract(qty, "\\d+")), #price per unit
+      str_detect(qty, "\\d+(,\\d+)? ?l") ~ price *0.1 / parse_number(str_extract(qty, "\\d+(,\\d+)? ?l"), locale = locale(decimal_mark = ",")), #price per 100ml for Litters
+      TRUE ~ price 
+    )
+  ) %>% 
+  mutate(avg_price = round(avg_price, 2))
+  
+
+cleaned_clarel
+```
+
+\
+\
 
