@@ -40,7 +40,7 @@ set_config(
 #install.packages("RSelenium", dependencies = TRUE)
 
 #Opening hidden browser
-remDr <- rsDriver(port = 4463L, browser = "firefox",  verbose=F, chromever = NULL)
+remDr <- rsDriver(port = 4464L, browser = "firefox",  verbose=F, chromever = NULL)
 
 
 merc <-"https://tienda.mercadona.es/categories"
@@ -52,9 +52,10 @@ remDr$client$navigate(merc)
 
 ```
 
-#Obtaining URLs
-```{r}
+### Obtaining URLs
+#### Clicking through opening page
 
+```{r}
 driver <- remDr$client
 
 #Note following only when having newly initiated the port
@@ -75,6 +76,10 @@ driver$findElement(value = "(//button[@class = 'button button-primary button-big
 
 ##### Until here
 
+```
+
+#### Obtain the URLs per category
+```{r}
 
 #Get URLs 'Cuidado del cabello'
 
@@ -179,13 +184,13 @@ cat_clean<-cat_info|>
 
 
 #Make all variables length 5 to create NA for missing values 
-cat_clean <- lapply(cat_clean, function(x) {
-  length(x) <- 5
-  x
-})
+#cat_clean <- lapply(cat_clean, function(x) {
+  #length(x) <- 5
+  #x
+#})
 
 #Only keep the variables with 5 or less strings
-cat_clean<- cat_clean[lengths(cat_clean) <= 5]
+cat_clean<- cat_clean[lengths(cat_clean) == 5]
 
 #Create a dataframe
 data.frame(
@@ -283,31 +288,18 @@ final$brand <- str_extract_all(final$name, regex(brands_or, ignore_case = TRUE))
 ```{r}
 units <- c("L", "ml", "ud", "sobres", "bandas", "g")
 
-final_1 <- final |> 
+mercadona <- final |> 
   filter(quantity_unit %in% units) |> 
+  filter(str_detect(price, "[0-9]")) |> 
+  mutate(price = str_replace_all(price, ",", ".")) |> 
   mutate(quantity = as.numeric(quantity),
          price = as.numeric(price)) |> 
   mutate(avg_price = case_when(
     str_detect(quantity_unit, "g|ml") ~ (price/quantity)*100,
     str_detect(quantity_unit, "L") ~ (price/quantity)/100,
     str_detect(quantity_unit, "ud") ~ price /quantity
-    ))
-
-
-final |> 
-  distinct(quantity_unit)
-
-
-
-mutate(
-    avg_price = case_when(
-      str_detect(qty, "\\d+ ?ml|\\d+ ?g") ~ price * 100 / as.numeric(str_extract(qty, "\\d+")), #price per 100ml/g
-      str_detect(qty, "\\d+ ?u(ds)?") ~ price / as.numeric(str_extract(qty, "\\d+")), #price per unit
-      str_detect(qty, "\\d+(,\\d+)? ?l") ~ price *0.1 / parse_number(str_extract(qty, "\\d+(,\\d+)? ?l"), locale = locale(decimal_mark = ",")), #price per 100ml for Litters
-      TRUE ~ price 
-    )
-  ) %>% 
-  mutate(avg_price = round(avg_price, 2))
+    )) |> 
+   mutate(avg_price = round(avg_price, 2))
 
 ```
 
@@ -320,21 +312,110 @@ gender <-c("Men", "Women", "Man", "Woman", "Hombre", "Mujer", "Hombres", "Mujere
 #Collapsing the gender vector to 
 gender_or <- paste(gender, collapse = "|")
 
-final$gender_name <-str_extract_all(final$name, regex(gender_or))
+mercadona <-mercadona |> 
+  mutate(combined =  paste(mercadona$name, mercadona$subcat, sep = " ")) |> 
+  mutate(gender_name =  str_extract(combined, regex(paste0("\\b(", gender_or, ")\\b"), ignore_case = TRUE)) ) |> 
+  select(-combined)
 
-# Convert 'character(0)' to 'Non-Male'
-final$gender_name[final$gender_name == "character(0)"] <- "Non-Male"
+# Convert NA to 'Non-Male'
 
+mercadona$gender_name[is.na(mercadona$gender_name)] <- "Non-Male"
+
+
+#Create Male and Female vectors
 male <- c("Men", "Man", "Hombre", "Hombres", "Him", "Niño", "Niños", "Homme", "Male",  "Males") 
+
+male <- c(male, tolower(male))
 
 female <- c("Women", "Woman", "Mujer", "Mujeres", "Her", "Niña", "Niñas", "Femme", "Female", "Females", "Venus") 
 
-final$gender <- case_when(final$gender_name %in% male ~ "Male",
-                          final$gender_name %in% female ~ "Female",
-                          final$gender_name == "Non-Male"~ "Non-Male")
+female <- c(female, tolower(female))
+
+#Assign gender to products (separate column for female)
+mercadona$gender <- case_when(
+  mercadona$gender_name %in% male | mercadona$subcat %in% male ~ "Male",
+  mercadona$gender_name %in% female|mercadona$subcat %in% female ~ "Female",
+  mercadona$gender_name == "Non-Male"~ "Non-Male")
+
+#Assign gender to products (separate column for female)
+mercadona$gender_2 <- case_when(
+  mercadona$gender == "Male" ~ "Male",
+  mercadona$gender == "Female" ~ "Non-Male",
+  mercadona$gender == "Non-Male"~ "Non-Male")
+
 
 ```
 
+## Mean comparisons
+### Categories
+```{r}
+
+#Compare all male and non-male products in the category "Cuidado del cabello" in ml, however impossible because no male products
+cat_1_m <- mercadona |> 
+  filter(cat_name == "Cuidado del cabello" & quantity_unit == "ml")
+
+prices_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Male"]
+prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
+
+# Perform independent samples t-test
+t_test_result <- t.test(prices_male, prices_non_male)
+t_test_result
+
+#Compare all male and non-male products in the category "Cuidado del cabello" in ud
+cat_1_m <- mercadona |> 
+  filter(cat_name == "Cuidado del cabello" & quantity_unit == "ml")
+
+cat_1_m_ud <- mercadona |> 
+  filter(cat_name == "Cuidado del cabello" & quantity_unit == "ud")
+
+prices_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Male"]
+prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
+
+# Perform independent samples t-test
+t_test_result <- t.test(prices_male, prices_non_male)
+t_test_result
+
+
+
+#Compare all male and non-male products in the category "Cuidado facial y corporal" in ml, however impossible because no male products
+cat_2_m <- mercadona |> 
+  filter(cat_name == "Cuidado facial y corporal" & quantity_unit == "ml")
+
+prices_male <- cat_2_m$avg_price[cat_2_m$gender_2 == "Male"]
+prices_non_male <- cat_2_m$avg_price[cat_2_m$gender_2 == "Non-Male"]
+
+# Perform independent samples t-test
+t_test_result <- t.test(prices_male, prices_non_male, alternative = "less")
+t_test_result
+
+
+#Compare all male and non-male products in the category "Cuidado facial y corporal" in ud, however impossible because no male products
+
+cat_2_m_ud <- mercadona |> 
+  filter(cat_name == "Cuidado facial y corporal" & quantity_unit == "ud")
+
+prices_male <- cat_2_m_ud$avg_price[cat_2_m_ud$gender_2 == "Male"]
+prices_non_male <- cat_2_m_ud$avg_price[cat_2_m_ud$gender_2 == "Non-Male"]
+
+# Perform independent samples t-test
+t_test_result <- t.test(prices_male, prices_non_male, alternative = "less")
+t_test_result
+
+```
+
+### sub categories
+```{r}
+
+cat_1_1_m <- mercadona |> 
+  filter(subcat == "Cuidado del cabello" & quantity_unit == "ml")
+
+prices_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Male"]
+prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
+
+# Perform independent samples t-test
+t_test_result <- t.test(prices_male, prices_non_male)
+t_test_result
+```
 
 
 
