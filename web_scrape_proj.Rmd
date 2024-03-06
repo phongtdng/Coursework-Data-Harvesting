@@ -563,6 +563,10 @@ It took 7.1 minutes to scrape.
 ### Data Cleaning
 
 ```{r}
+all_products_clarel <- read_csv("datasets/clarel.csv")
+```
+
+```{r}
 #Quantity detect
 cleaned_clarel <- all_products_clarel %>% 
   as_tibble() %>% 
