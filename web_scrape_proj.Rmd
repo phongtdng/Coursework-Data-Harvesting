@@ -4,7 +4,7 @@ author: "Phong Duong, Nienke Visscher"
 date: "2024-02-15"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Library
@@ -136,7 +136,7 @@ url <-unlist(url)
 
 ```
 
-#Scraping and cleaning data
+### Scraping and cleaning data
 
 ```{r}
 
@@ -307,7 +307,7 @@ mercadona <- final |>
 
 ```
 
-###Gender product
+### Gender product
 
 ```{r}
 #Vector of words indicating gender
@@ -452,20 +452,42 @@ remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-conse
 #### Scrape Hombre Category
 
 ```{r}
+#helper function to get all subcategories of main category input
 get_subcat2_url <- function(category){
-  remDr$getPageSource()[[1]] %>% 
+  #get all the nodes containing category keyword
+  all_nodes <- remDr$getPageSource()[[1]] %>% 
     read_html() %>% 
-    xml_find_all(glue("//span[a[contains(text(),'{category}')]]//li/a[contains(@class,'item')]")) %>% 
+    xml_find_all(glue("//a[contains(@href,'/{category}/')]")) %>% 
     xml_attr("href") %>% 
+    .[str_detect(.,"https",negate = TRUE)] %>% 
+    unique(.)
+  
+  #get subcategories and sub-subcateogry(product type) 
+  sub_cat <- all_nodes[str_detect(all_nodes, glue("es/{category}/\\w+(-\\w+)?$"))]
+  product_type <- all_nodes[str_detect(all_nodes, glue("{category}/\\w+(-\\w+)?/\\w+"))]
+  
+  #identify subcategories with no product type to include in list to scrape
+  no_product_type <- c()
+  for (i in sub_cat) {
+    if(!any(str_detect(product_type, i))) {
+      no_product_type <- c(no_product_type,i)
+    }
+  }
+  
+  #all urls to subcategories and sub-subcategories of the main categories
+  all_urls <- c(no_product_type, product_type) %>% 
     paste0("https://www.clarel.es",.)
+  
+  return(all_urls)
 }
-sub_cat_2_url <- get_subcat2_url("Hombre")
 
-remDr$navigate(sub_cat_2_url[10])
+#test run
+sub_cat_2_url <- get_subcat2_url("hombre")
+sub_cat_2_url
 ```
 
 ```{r}
-#Load more items
+#Load more items helper function
 load_all_items <- function() {
   Sys.sleep(3.5)
   tryCatch(
@@ -484,11 +506,12 @@ load_all_items <- function() {
     error = function(e){})
 }
 
+#test run
 # load_all_items()
 ```
 
 ```{r}
-#Get all product info
+#Get all product info helper function
 get_product_info <- function(url) {
   remDr$navigate(url)
   
@@ -517,7 +540,7 @@ get_product_info <- function(url) {
   )
   }
   
-  #Get cat & subcats
+  #Get categories & subcategories to add to the dataframe
   cat <- remDr$getPageSource()[[1]] %>% 
     read_html() %>% 
     xml_find_all("//span[@class='subcategory']") %>% 
@@ -530,7 +553,7 @@ get_product_info <- function(url) {
   return(df)
 }
 
-
+#test run
 hombre_products <- map_dfr(sub_cat_2_url, get_product_info)
 
 hombre_products
@@ -539,8 +562,10 @@ hombre_products
 #### Scrape Multiple Categories
 
 ```{r}
-imp_cat <- c("Hombre", "Higiene", "Cabello", "Perfumes")
+#all main categories to be scraped
+imp_cat <- c("hombre", "higiene", "cabello", "perfumes")
 
+#helper function to scrape data on large scale
 scrape_all <- function(category) {
   remDr$navigate(clarel_url)
   
@@ -551,39 +576,97 @@ scrape_all <- function(category) {
   return(df)
 }
 
-start <- Sys.time()
 all_products_clarel <- map_dfr(imp_cat ,scrape_all)
-stop <- Sys.time()
 
+#write into csv to avoid scraping every time
 write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
 
-It took 7.1 minutes to scrape.
+It took 8 minutes to scrape.
 
 ### Data Cleaning
 
 ```{r}
-#Quantity detect
+all_products_clarel <- read_csv("datasets/clarel.csv")
+```
+
+```{r}
+#helper function to id gender & kid of products
+gender_id <- function(str){
+  male <- c("men", "man", "hombre", "hombres", "him", "homme", "male",  "males", "masculino") 
+
+  female <- c("women", "woman", "mujer", "mujeres", "her", "femme", "female", "females", "venus", "femenina") 
+
+  kids <- c("kid", "kids", "niños", "niño", "niñas", "niña", "infantil", "infantiles")
+  
+  str <- tolower(str)
+  
+  if(str_detect(str, paste0("\\b(", kids, ")\\b", collapse = "|"))) {
+    return("Kid")
+  } else if(str_detect(str, paste0("\\b(", female, ")\\b", collapse = "|"))) {
+    return("Female")
+  } else if(str_detect(str, paste0("\\b(", male, ")\\b", collapse = "|"))) {
+    return("Male")
+  } else {return(NA)}
+  
+}
+```
+
+```{r}
 cleaned_clarel <- all_products_clarel %>% 
   as_tibble() %>% 
+  #Remove duplicated products
   distinct(product_name, .keep_all = TRUE) %>% 
-  separate_wider_delim(full_cat, delim = "-", names = c("category", "sub_category", "product_type")) %>% 
-  mutate(qty = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
+  #Mutate to later split into cateogries and subcategories
+  mutate(
+    full_cat = str_replace(full_cat, "-", "/")
+  ) %>% 
+  #Split category into sub category and product type
+  separate_wider_delim(full_cat, delim = "/", names = c("category", "sub_category")) %>% 
+  #Extract quantity with unit
+  mutate(qty = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?ud(s)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
+  #NA rows in quantity means product is sold in 1 unit
   mutate(qty = replace_na(qty, "1")) %>% 
-  mutate(price = parse_number(str_replace(price, "€", ""), locale = locale(decimal_mark = ","))) %>% 
+  #Extract unit of quantity
+  mutate(
+    qty_unit = ifelse(qty == 1, "ud", str_extract(qty, "ml|l|ud|g")),
+    price = parse_number(str_replace(price, "€", ""), locale = locale(decimal_mark = ",")),
+    qty = parse_number(qty,locale = locale(decimal_mark = ","))) %>% 
+  #Calculate average price
   mutate(
     avg_price = case_when(
-      str_detect(qty, "\\d+ ?ml|\\d+ ?g") ~ price * 100 / as.numeric(str_extract(qty, "\\d+")), #price per 100ml/g
-      str_detect(qty, "\\d+ ?u(ds)?") ~ price / as.numeric(str_extract(qty, "\\d+")), #price per unit
-      str_detect(qty, "\\d+(,\\d+)? ?l") ~ price *0.1 / parse_number(str_extract(qty, "\\d+(,\\d+)? ?l"), locale = locale(decimal_mark = ",")), #price per 100ml for Litters
+      str_detect(qty_unit, "ml|g") ~ price * 100 / qty, #price per 100ml/g
+      qty_unit == "ud" ~ price / qty, #price per unit
+      qty_unit == "l" ~ price *0.1 / qty, #price per 100ml for Litters
       TRUE ~ price 
     )
   ) %>% 
-  mutate(avg_price = round(avg_price, 2))
-  
-
-cleaned_clarel
+  #Round average price and identify targeted gender of product
+  mutate(avg_price = round(avg_price, 2),
+         gender = case_when(
+           (category == "Hombre" | str_detect(sub_category, "Hombre")) ~ "Male",
+           TRUE ~ mapply(gender_id, paste(product_name, sub_category))
+           )
+         ) %>% 
+  #Replace non gender specific product with non-male
+  mutate(gender = replace_na(gender, "Non-Male"),
+         #gender_2 to compare male vs non-male targeted products
+         gender_2 = ifelse(gender == "Male", "Male", "Non-Male")) %>% 
+  #Remove products for kids
+  filter(gender != "Kid") %>% 
+  #Reorganise column names to join with other datasets
+  select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
 ```
 
-\
-\
+## Data Joining
+
+```{r}
+#Modify mercadona dataframe to join
+mercadona_cleaned <- mercadona %>% select(-brand, -gender_name) 
+
+#Match column names
+colnames(cleaned_clarel) <- colnames(mercadona_cleaned)
+
+#Join 2 dataset together
+big_df <- bind_rows(mercadona_cleaned, cleaned_clarel)
+```
