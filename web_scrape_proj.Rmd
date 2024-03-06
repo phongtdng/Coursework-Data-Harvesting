@@ -53,6 +53,7 @@ remDr$client$navigate(merc)
 ```
 
 ### Obtaining URLs
+
 #### Clicking through opening page
 
 ```{r}
@@ -79,6 +80,7 @@ driver$findElement(value = "(//button[@class = 'button button-primary button-big
 ```
 
 #### Obtain the URLs per category
+
 ```{r}
 
 #Get URLs 'Cuidado del cabello'
@@ -134,7 +136,8 @@ url <-unlist(url)
 
 ```
 
-#Scraping and cleaning data 
+#Scraping and cleaning data
+
 ```{r}
 
 #Create function
@@ -213,8 +216,8 @@ final <- map_dfr(url, cat_grabber)
 
 ```
 
-
 ### Scrape and add main categories to data frame
+
 ```{r}
 
 
@@ -244,8 +247,8 @@ final <- final |>
   dplyr::select(-ud)
 ```
 
-
 ### Brands
+
 ```{r}
 
 brands <- c("Deliplus", "Elvive", "Pantene", "O'lysee", 
@@ -285,6 +288,7 @@ final$brand <- str_extract_all(final$name, regex(brands_or, ignore_case = TRUE))
 ```
 
 ### Average prices
+
 ```{r}
 units <- c("L", "ml", "ud", "sobres", "bandas", "g")
 
@@ -303,8 +307,8 @@ mercadona <- final |>
 
 ```
 
-
 ###Gender product
+
 ```{r}
 #Vector of words indicating gender
 gender <-c("Men", "Women", "Man", "Woman", "Hombre", "Mujer", "Hombres", "Mujeres", "Him", "Her", "Niño", "Niña", "Niños", "Niñas", "Homme", "Femme", "Male", "Female", "Males", "Females", "Venus") 
@@ -347,7 +351,9 @@ mercadona$gender_2 <- case_when(
 ```
 
 ## Mean comparisons
+
 ### Categories
+
 ```{r}
 
 #Compare all male and non-male products in the category "Cuidado del cabello" in ml, however impossible because no male products
@@ -404,6 +410,7 @@ t_test_result
 ```
 
 ### sub categories
+
 ```{r}
 
 cat_1_1_m <- mercadona |> 
@@ -416,8 +423,6 @@ prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
 t_test_result <- t.test(prices_male, prices_non_male)
 t_test_result
 ```
-
-
 
 ## Clarel
 
@@ -438,7 +443,7 @@ clarel_url <- "https://www.clarel.es/es/"
 
 remDr$navigate(clarel_url)
 
-Sys.sleep(4)
+Sys.sleep(5)
 
 #Reject cookie
 remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
@@ -534,7 +539,7 @@ hombre_products
 #### Scrape Multiple Categories
 
 ```{r}
-imp_cat <- c("Hombre", "Higiene", "Cabello")
+imp_cat <- c("Hombre", "Higiene", "Cabello", "Perfumes")
 
 scrape_all <- function(category) {
   remDr$navigate(clarel_url)
@@ -553,9 +558,9 @@ stop <- Sys.time()
 write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
 
-### Data Cleaning
+It took 7.1 minutes to scrape.
 
-```{r}
+### Data Cleaning
 
 ```{r}
 #Quantity detect
@@ -582,4 +587,3 @@ cleaned_clarel
 
 \
 \
-
