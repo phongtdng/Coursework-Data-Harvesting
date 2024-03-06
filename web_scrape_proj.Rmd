@@ -452,7 +452,9 @@ remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-conse
 #### Scrape Hombre Category
 
 ```{r}
+#helper function to get all subcategories of main category input
 get_subcat2_url <- function(category){
+  #get all the nodes containing category keyword
   all_nodes <- remDr$getPageSource()[[1]] %>% 
     read_html() %>% 
     xml_find_all(glue("//a[contains(@href,'/{category}/')]")) %>% 
@@ -460,9 +462,11 @@ get_subcat2_url <- function(category){
     .[str_detect(.,"https",negate = TRUE)] %>% 
     unique(.)
   
+  #get subcategories and sub-subcateogry(product type) 
   sub_cat <- all_nodes[str_detect(all_nodes, glue("es/{category}/\\w+(-\\w+)?$"))]
   product_type <- all_nodes[str_detect(all_nodes, glue("{category}/\\w+(-\\w+)?/\\w+"))]
   
+  #identify subcategories with no product type to include in list to scrape
   no_product_type <- c()
   for (i in sub_cat) {
     if(!any(str_detect(product_type, i))) {
@@ -470,18 +474,20 @@ get_subcat2_url <- function(category){
     }
   }
   
+  #all urls to subcategories and sub-subcategories of the main categories
   all_urls <- c(no_product_type, product_type) %>% 
     paste0("https://www.clarel.es",.)
   
   return(all_urls)
 }
 
+#test run
 sub_cat_2_url <- get_subcat2_url("hombre")
 sub_cat_2_url
 ```
 
 ```{r}
-#Load more items
+#Load more items helper function
 load_all_items <- function() {
   Sys.sleep(3.5)
   tryCatch(
@@ -500,11 +506,12 @@ load_all_items <- function() {
     error = function(e){})
 }
 
+#test run
 # load_all_items()
 ```
 
 ```{r}
-#Get all product info
+#Get all product info helper function
 get_product_info <- function(url) {
   remDr$navigate(url)
   
@@ -533,7 +540,7 @@ get_product_info <- function(url) {
   )
   }
   
-  #Get cat & subcats
+  #Get categories & subcategories to add to the dataframe
   cat <- remDr$getPageSource()[[1]] %>% 
     read_html() %>% 
     xml_find_all("//span[@class='subcategory']") %>% 
@@ -546,7 +553,7 @@ get_product_info <- function(url) {
   return(df)
 }
 
-
+#test run
 hombre_products <- map_dfr(sub_cat_2_url, get_product_info)
 
 hombre_products
@@ -555,8 +562,10 @@ hombre_products
 #### Scrape Multiple Categories
 
 ```{r}
+#all main categories to be scraped
 imp_cat <- c("hombre", "higiene", "cabello", "perfumes")
 
+#helper function to scrape data on large scale
 scrape_all <- function(category) {
   remDr$navigate(clarel_url)
   
@@ -567,10 +576,9 @@ scrape_all <- function(category) {
   return(df)
 }
 
-start <- Sys.time()
 all_products_clarel <- map_dfr(imp_cat ,scrape_all)
-stop <- Sys.time()
 
+#write into csv to avoid scraping every time
 write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
 
@@ -583,7 +591,7 @@ all_products_clarel <- read_csv("datasets/clarel.csv")
 ```
 
 ```{r}
-#helper function to id gender & kid
+#helper function to id gender & kid of products
 gender_id <- function(str){
   male <- c("men", "man", "hombre", "hombres", "him", "homme", "male",  "males", "masculino") 
 
@@ -609,6 +617,7 @@ cleaned_clarel <- all_products_clarel %>%
   as_tibble() %>% 
   #Remove duplicated products
   distinct(product_name, .keep_all = TRUE) %>% 
+  #Mutate to later split into cateogries and subcategories
   mutate(
     full_cat = str_replace(full_cat, "-", "/")
   ) %>% 
@@ -645,6 +654,7 @@ cleaned_clarel <- all_products_clarel %>%
          gender_2 = ifelse(gender == "Male", "Male", "Non-Male")) %>% 
   #Remove products for kids
   filter(gender != "Kid") %>% 
+  #Reorganise column names to join with other datasets
   select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
 ```
 
