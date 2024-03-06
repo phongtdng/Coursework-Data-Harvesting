@@ -453,15 +453,31 @@ remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-conse
 
 ```{r}
 get_subcat2_url <- function(category){
-  remDr$getPageSource()[[1]] %>% 
+  all_nodes <- remDr$getPageSource()[[1]] %>% 
     read_html() %>% 
-    xml_find_all(glue("//span[a[contains(text(),'{category}')]]//li/a[contains(@class,'item')]")) %>% 
+    xml_find_all(glue("//a[contains(@href,'/{category}/')]")) %>% 
     xml_attr("href") %>% 
+    .[str_detect(.,"https",negate = TRUE)] %>% 
+    unique(.)
+  
+  sub_cat <- all_nodes[str_detect(all_nodes, glue("es/{category}/\\w+(-\\w+)?$"))]
+  product_type <- all_nodes[str_detect(all_nodes, glue("{category}/\\w+(-\\w+)?/\\w+"))]
+  
+  no_product_type <- c()
+  for (i in sub_cat) {
+    if(!any(str_detect(product_type, i))) {
+      no_product_type <- c(no_product_type,i)
+    }
+  }
+  
+  all_urls <- c(no_product_type, product_type) %>% 
     paste0("https://www.clarel.es",.)
+  
+  return(all_urls)
 }
-sub_cat_2_url <- get_subcat2_url("Hombre")
 
-remDr$navigate(sub_cat_2_url[10])
+sub_cat_2_url <- get_subcat2_url("hombre")
+sub_cat_2_url
 ```
 
 ```{r}
@@ -539,7 +555,7 @@ hombre_products
 #### Scrape Multiple Categories
 
 ```{r}
-imp_cat <- c("Hombre", "Higiene", "Cabello", "Perfumes")
+imp_cat <- c("hombre", "higiene", "cabello", "perfumes")
 
 scrape_all <- function(category) {
   remDr$navigate(clarel_url)
@@ -558,7 +574,7 @@ stop <- Sys.time()
 write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
 
-It took 7.1 minutes to scrape.
+It took 8 minutes to scrape.
 
 ### Data Cleaning
 
@@ -628,4 +644,4 @@ cleaned_clarel <- all_products_clarel %>%
 
 ```
 
-##  
+## 
