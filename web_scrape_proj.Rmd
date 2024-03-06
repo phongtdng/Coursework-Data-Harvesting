@@ -644,5 +644,19 @@ cleaned_clarel <- all_products_clarel %>%
          #gender_2 to compare male vs non-male targeted products
          gender_2 = ifelse(gender == "Male", "Male", "Non-Male")) %>% 
   #Remove products for kids
-  filter(gender != "Kid")
+  filter(gender != "Kid") %>% 
+  select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
+```
+
+## Data Joining
+
+```{r}
+#Modify mercadona dataframe to join
+mercadona_cleaned <- mercadona %>% select(-brand, -gender_name) 
+
+#Match column names
+colnames(cleaned_clarel) <- colnames(mercadona_cleaned)
+
+#Join 2 dataset together
+big_df <- bind_rows(mercadona_cleaned, cleaned_clarel)
 ```
