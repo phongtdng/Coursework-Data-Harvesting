@@ -585,20 +585,20 @@ all_products_clarel <- read_csv("datasets/clarel.csv")
 ```{r}
 #helper function to id gender & kid
 gender_id <- function(str){
-  male <- c("men", "man", "hombre", "hombres", "him", "homme", "male",  "males") 
+  male <- c("men", "man", "hombre", "hombres", "him", "homme", "male",  "males", "masculino") 
 
-  female <- c("women", "woman", "mujer", "mujeres", "her", "femme", "female", "females", "venus") 
+  female <- c("women", "woman", "mujer", "mujeres", "her", "femme", "female", "females", "venus", "femenina") 
 
-  kids <- c("kid", "kids", "niños", "niño", "niñas", "niña")
+  kids <- c("kid", "kids", "niños", "niño", "niñas", "niña", "infantil", "infantiles")
   
   str <- tolower(str)
   
-  if(str_detect(str, paste0("\\b(", male, ")\\b", collapse = "|"))) {
-    return("Male")
+  if(str_detect(str, paste0("\\b(", kids, ")\\b", collapse = "|"))) {
+    return("Kid")
   } else if(str_detect(str, paste0("\\b(", female, ")\\b", collapse = "|"))) {
     return("Female")
-  } else if(str_detect(str, paste0("\\b(", kids, ")\\b", collapse = "|"))) {
-    return("Kid")
+  } else if(str_detect(str, paste0("\\b(", male, ")\\b", collapse = "|"))) {
+    return("Male")
   } else {return(NA)}
   
 }
@@ -609,8 +609,11 @@ cleaned_clarel <- all_products_clarel %>%
   as_tibble() %>% 
   #Remove duplicated products
   distinct(product_name, .keep_all = TRUE) %>% 
+  mutate(
+    full_cat = str_replace(full_cat, "-", "/")
+  ) %>% 
   #Split category into sub category and product type
-  separate_wider_delim(full_cat, delim = "-", names = c("category", "sub_category", "product_type")) %>% 
+  separate_wider_delim(full_cat, delim = "/", names = c("category", "sub_category")) %>% 
   #Extract quantity with unit
   mutate(qty = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?ud(s)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
   #NA rows in quantity means product is sold in 1 unit
@@ -631,17 +634,15 @@ cleaned_clarel <- all_products_clarel %>%
   ) %>% 
   #Round average price and identify targeted gender of product
   mutate(avg_price = round(avg_price, 2),
-         gender = ifelse(category == "Hombre", "Male",mapply(gender_id, product_name))
+         gender = case_when(
+           (category == "Hombre" | str_detect(sub_category, "Hombre")) ~ "Male",
+           TRUE ~ mapply(gender_id, paste(product_name, sub_category))
+           )
          ) %>% 
-  #take out products for kids
-  filter(gender != "Kid") %>% 
   #Replace non gender specific product with non-male
   mutate(gender = replace_na(gender, "Non-Male"),
          #gender_2 to compare male vs non-male targeted products
-         gender_2 = ifelse(gender == "Male", "Male", "Non-Male"))
-
-
-
+         gender_2 = ifelse(gender == "Male", "Male", "Non-Male")) %>% 
+  #Remove products for kids
+  filter(gender != "Kid")
 ```
-
-## 
