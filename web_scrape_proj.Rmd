@@ -4,7 +4,7 @@ author: "Phong Duong, Nienke Visscher"
 date: "2024-02-15"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Library
@@ -136,7 +136,7 @@ url <-unlist(url)
 
 ```
 
-#Scraping and cleaning data
+### Scraping and cleaning data
 
 ```{r}
 
@@ -307,7 +307,7 @@ mercadona <- final |>
 
 ```
 
-###Gender product
+### Gender product
 
 ```{r}
 #Vector of words indicating gender
@@ -567,27 +567,65 @@ all_products_clarel <- read_csv("datasets/clarel.csv")
 ```
 
 ```{r}
-#Quantity detect
+#helper function to id gender & kid
+gender_id <- function(str){
+  male <- c("men", "man", "hombre", "hombres", "him", "homme", "male",  "males") 
+
+  female <- c("women", "woman", "mujer", "mujeres", "her", "femme", "female", "females", "venus") 
+
+  kids <- c("kid", "kids", "niños", "niño", "niñas", "niña")
+  
+  str <- tolower(str)
+  
+  if(str_detect(str, paste0("\\b(", male, ")\\b", collapse = "|"))) {
+    return("Male")
+  } else if(str_detect(str, paste0("\\b(", female, ")\\b", collapse = "|"))) {
+    return("Female")
+  } else if(str_detect(str, paste0("\\b(", kids, ")\\b", collapse = "|"))) {
+    return("Kid")
+  } else {return(NA)}
+  
+}
+```
+
+```{r}
 cleaned_clarel <- all_products_clarel %>% 
   as_tibble() %>% 
+  #Remove duplicated products
   distinct(product_name, .keep_all = TRUE) %>% 
+  #Split category into sub category and product type
   separate_wider_delim(full_cat, delim = "-", names = c("category", "sub_category", "product_type")) %>% 
-  mutate(qty = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?u(ds)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
+  #Extract quantity with unit
+  mutate(qty = str_extract(tolower(product_name), "\\d+ ?ml|\\d+ ?g|\\d+ ?ud(s)?|\\d+(,\\d+)? ?l") ,.after = product_name) %>% 
+  #NA rows in quantity means product is sold in 1 unit
   mutate(qty = replace_na(qty, "1")) %>% 
-  mutate(price = parse_number(str_replace(price, "€", ""), locale = locale(decimal_mark = ","))) %>% 
+  #Extract unit of quantity
+  mutate(
+    qty_unit = ifelse(qty == 1, "ud", str_extract(qty, "ml|l|ud|g")),
+    price = parse_number(str_replace(price, "€", ""), locale = locale(decimal_mark = ",")),
+    qty = parse_number(qty,locale = locale(decimal_mark = ","))) %>% 
+  #Calculate average price
   mutate(
     avg_price = case_when(
-      str_detect(qty, "\\d+ ?ml|\\d+ ?g") ~ price * 100 / as.numeric(str_extract(qty, "\\d+")), #price per 100ml/g
-      str_detect(qty, "\\d+ ?u(ds)?") ~ price / as.numeric(str_extract(qty, "\\d+")), #price per unit
-      str_detect(qty, "\\d+(,\\d+)? ?l") ~ price *0.1 / parse_number(str_extract(qty, "\\d+(,\\d+)? ?l"), locale = locale(decimal_mark = ",")), #price per 100ml for Litters
+      str_detect(qty_unit, "ml|g") ~ price * 100 / qty, #price per 100ml/g
+      qty_unit == "ud" ~ price / qty, #price per unit
+      qty_unit == "l" ~ price *0.1 / qty, #price per 100ml for Litters
       TRUE ~ price 
     )
   ) %>% 
-  mutate(avg_price = round(avg_price, 2))
-  
+  #Round average price and identify targeted gender of product
+  mutate(avg_price = round(avg_price, 2),
+         gender = ifelse(category == "Hombre", "Male",mapply(gender_id, product_name))
+         ) %>% 
+  #take out products for kids
+  filter(gender != "Kid") %>% 
+  #Replace non gender specific product with non-male
+  mutate(gender = replace_na(gender, "Non-Male"),
+         #gender_2 to compare male vs non-male targeted products
+         gender_2 = ifelse(gender == "Male", "Male", "Non-Male"))
 
-cleaned_clarel
+
+
 ```
 
-\
-\
+##  
