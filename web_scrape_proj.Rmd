@@ -26,18 +26,23 @@ library(tidyr)
 
 ## Mercadona
 
-### Setting up RSelenium
-
 ```{r}
-set_config(
-  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Nienke Visscher / nienvis@gmail.com")
-)
 
 #Code for attaching JAVA
 #Sys.getenv("JAVA_HOME")
 #Sys.setenv(JAVA_HOME = "C:/Program Files/Common Files/Oracle/Java/javapath/java.exe")
 #Sys.getenv("PATH")
 #install.packages("RSelenium", dependencies = TRUE)
+
+```
+
+
+### Setting up RSelenium
+
+```{r}
+set_config(
+  user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Nienke Visscher / nienvis@gmail.com")
+)
 
 #Opening hidden browser
 remDr <- rsDriver(port = 4464L, browser = "firefox",  verbose=F, chromever = NULL)
@@ -74,8 +79,6 @@ codigo$sendKeysToElement(list("28014"))
 
 #Click 
 driver$findElement(value = "(//button[@class = 'button button-primary button-big'])[1]")$clickElement()
-
-##### Until here
 
 ```
 
@@ -186,11 +189,6 @@ cat_clean<-cat_info|>
   strsplit("/")
 
 
-#Make all variables length 5 to create NA for missing values 
-#cat_clean <- lapply(cat_clean, function(x) {
-  #length(x) <- 5
-  #x
-#})
 
 #Only keep the variables with 5 or less strings
 cat_clean<- cat_clean[lengths(cat_clean) == 5]
@@ -219,7 +217,6 @@ final <- map_dfr(url, cat_grabber)
 ### Scrape and add main categories to data frame
 
 ```{r}
-
 
 driver$navigate(url[1])
   
@@ -311,7 +308,7 @@ mercadona <- final |>
 
 ```{r}
 #Vector of words indicating gender
-gender <-c("Men", "Women", "Man", "Woman", "Hombre", "Mujer", "Hombres", "Mujeres", "Him", "Her", "Niño", "Niña", "Niños", "Niñas", "Homme", "Femme", "Male", "Female", "Males", "Females", "Venus") 
+gender <-c("Men", "Women", "Man", "Woman", "Hombre", "Mujer", "Hombres", "Mujeres", "Him", "Her", "Niña", "Niñas", "Homme", "Femme", "Male", "Female", "Males", "Females", "Venus") 
 
 #Collapsing the gender vector to 
 gender_or <- paste(gender, collapse = "|")
@@ -327,7 +324,7 @@ mercadona$gender_name[is.na(mercadona$gender_name)] <- "Non-Male"
 
 
 #Create Male and Female vectors
-male <- c("Men", "Man", "Hombre", "Hombres", "Him", "Niño", "Niños", "Homme", "Male",  "Males") 
+male <- c("Men", "Man", "Hombre", "Hombres", "Him", "Homme", "Male",  "Males") 
 
 male <- c(male, tolower(male))
 
@@ -360,17 +357,14 @@ mercadona$gender_2 <- case_when(
 cat_1_m <- mercadona |> 
   filter(cat_name == "Cuidado del cabello" & quantity_unit == "ml")
 
-prices_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Male"]
-prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
+prices_male <- cat_1_m$avg_price[cat_1_m$gender_2 == "Male"]
+prices_non_male <- cat_1_m$avg_price[cat_1_m$gender_2 == "Non-Male"]
 
 # Perform independent samples t-test
-t_test_result <- t.test(prices_male, prices_non_male)
+t_test_result <- t.test(prices_male, prices_non_male, alternative = "greater")
 t_test_result
 
 #Compare all male and non-male products in the category "Cuidado del cabello" in ud
-cat_1_m <- mercadona |> 
-  filter(cat_name == "Cuidado del cabello" & quantity_unit == "ml")
-
 cat_1_m_ud <- mercadona |> 
   filter(cat_name == "Cuidado del cabello" & quantity_unit == "ud")
 
@@ -378,9 +372,8 @@ prices_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Male"]
 prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
 
 # Perform independent samples t-test
-t_test_result <- t.test(prices_male, prices_non_male)
+t_test_result <- t.test(prices_male, prices_non_male, alternative = "greater")
 t_test_result
-
 
 
 #Compare all male and non-male products in the category "Cuidado facial y corporal" in ml, however impossible because no male products
@@ -407,7 +400,56 @@ prices_non_male <- cat_2_m_ud$avg_price[cat_2_m_ud$gender_2 == "Non-Male"]
 t_test_result <- t.test(prices_male, prices_non_male, alternative = "less")
 t_test_result
 
+library(broom)
+
+tidy(t.test(prices_male, prices_non_male, alternative = "less"))
+
 ```
+
+
+
+```{r}
+library(dplyr)
+library(purrr)
+
+cat_f <- c("Cuidado del cabello")
+quan_f <- c("ud")
+
+
+t_test_fun <- function(cat_f, quan_f) {
+  cat_d <- mercadona %>%
+    filter(cat_name == cat_f & quantity_unit == quan_f)
+  
+  prices_male <- cat_d$avg_price[cat_d$gender_2 == "Male"]
+  prices_non_male <- cat_d$avg_price[cat_d$gender_2 == "Non-Male"]
+  
+  t_test_result <- NULL
+  
+  tryCatch({
+    t_test_result <- tidy(t.test(prices_male, prices_non_male))
+  }, error = function(e) {NA
+    
+    print(e)
+  })
+}
+
+
+t_test_fun(cat_f, quan_f)
+
+# Define combinations of cat_f and quan_f
+cat_f <- c("Cuidado del cabello", "Cuidado del cabello","Cuidado facial y corporal","Cuidado facial y corporal")
+quan_f <- c("ml", "ud", "ml", "ud")
+
+# Perform t-tests for all combinations
+t_test_results <- map2_dfr(cat_f, quan_f, t_test_fun)
+
+# Print or access the t-test results
+print(t_test_results)
+
+
+```
+
+
 
 ### sub categories
 
