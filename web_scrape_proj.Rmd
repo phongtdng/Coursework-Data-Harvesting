@@ -623,6 +623,7 @@ At the time of writing this project, it took around 8 minutes to scrape the 4 ca
 ### Data Cleaning
 
 ```{r}
+#loading the data frame from the file created after scraping
 all_products_clarel <- read_csv("datasets/clarel.csv")
 ```
 
@@ -647,6 +648,10 @@ gender_id <- function(str){
   
 }
 ```
+
+It is extremely tricky to identify which products are aimed at men or women (especially women) because most products do not include this information. They are more easily identified through the pictures and packaging choice (such as pink color and with a woman figure for women products) but since we work with only text we are very limited to the ability to identify to which gender the product is geared toward. Some products are in "Hombre" category so they are easily classified for men but the other categories do not clearly indicate gender. We will try to detect this information using keywords in the product names and sub-categories.
+
+Above, we created some lists of words that could indicate whether the products are for men or women or kids. We also try to identify kids products because later on we will discard them since it is not the scope of this project. We then put those lists into a function that takes a string as input and detects whether in the string there is any word from the list, then categorizes the string accordingly.
 
 ```{r}
 cleaned_clarel <- all_products_clarel %>% 
@@ -693,6 +698,16 @@ cleaned_clarel <- all_products_clarel %>%
   #Reorganise column names to join with other datasets
   select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
 ```
+
+As for most web scraping projects, the scraped data is usually messy and needs diligent cleaning so it is appropriate for analysis. The same goes for the data scraped here previously.
+
+First we remove the duplicated products since products in some categories overlap and therefore appear multiple times in the data set. We then split the full category into main category and sub-category (which also includes product types). We first replace the first "-" of the full category collumn with another symbol so we can split into 2 columns based on that symbol.
+
+Next, we extract the quantity from the product name. The product name contains various information from the product to brand name, quantity, and more. We extract the quantity using Regex and look for numbers followed by quantity symbol (ml, L, g, u/ud/uds). If the product name does not contain any of these, it is most possible that the product is sold as one unit whole. Therefore, after extracting products with specific quantities, we impute the missing rows with 1 unit.
+
+We then extract the unit of the quantity then calculate the average price based on the unit. For milliliter (ml), gram (g), and litter (l) the average price is per 100 ml or g. For products that are sold in more than 1 unit the average price is calculated as per unit. Lastly, they are rounded at 2 decimal places.
+
+Finally, we detect the gender for which the product aims. First, all products in category "Hombre" are named "Male" and then we use the gender identifying function from before to detect if the product name or product sub-category/product type indicates that it is for men or women or kids. Since few products are explicitly described as for women, we make another label called "Non-Male" to compare specifically male-targeted products versus non-male-targeted products. The gender column include 4 different labels (Male, Female, Kid, and Non-Male). The gender_2 column consists of only 2 (Male and Non-Male). These are made for the purpose of analysis.
 
 ## Data Joining
 
