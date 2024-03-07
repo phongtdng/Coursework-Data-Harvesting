@@ -426,6 +426,8 @@ t_test_result
 
 ## Clarel
 
+For Clarel website, there is a lot of content hidden through Javascript so we will use Selenium to scrape all the interested content. The setup on my computer was initially troublesome as I wanted to use Chrome as browser. There were a few fix suggestions and the only one that worked for me was to delete the "LISCENSE.chromever" file for the corresponding. However, there was no clear explanation to this fix and the potential issues with deleting the file so we will use Firefox browser for selenium instead.
+
 ### Data Collection
 
 ```{r}
@@ -436,6 +438,8 @@ driver <- rsDriver(browser = "firefox",
 remDr <- driver[["client"]]
 ```
 
+We first initialize the Selenium server and create a remote driver session. We're saving the client object to a variable for quicker access later on.
+
 #### Main Webpage
 
 ```{r}
@@ -445,11 +449,15 @@ remDr$navigate(clarel_url)
 
 Sys.sleep(5)
 
-#Reject cookie
+#Reject cookies
 remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
 ```
 
+Once we navigate to the home page of Clarel, there is a pop up for cookies so we will need to either accept or reject the cookies. We leave the system to pause for 5 seconds after navigating to the home page so the browser has sufficient time to load everything. If reject cookies line code runs into error, most likely it is because the page has not fully loaded and the pop up has not appeared yet therefore the button is not found. It is necessary to run again the reject cookies code. If it still runs into error, it is likely that the elements in the web page have changed their name.
+
 #### Scrape Hombre Category
+
+We will start by scraping one category before streamline the scraping process for multiple categories. The structure of the pages of all categories are quite similar so we should not run into many troubles later on if we can scrape one category properly. In this project, I chose to start with "Hombre" category.
 
 ```{r}
 #helper function to get all subcategories of main category input
@@ -486,6 +494,24 @@ sub_cat_2_url <- get_subcat2_url("hombre")
 sub_cat_2_url
 ```
 
+In each main category of products on Clarel, there are also sub-categories and in each of the sub-category sometimes there are sub-section (I will refer to them as product type) the details the product type as well. We would like to get all of this information so later we have more resources to work with for the analysis in case that we need it.
+
+To do this, first I created a helper function to grab all the URLs to the sub-categories and product types. Another option would have been to navigate to each sub-category and grab the product types but it is more time consuming as we would need to go to multiple product type pages of multiple sub-category pages and the loading time would amass quickly. Therefore, I tried to identify all the URLs from the home page but the trade-off is some cleaning in the process.
+
+The logic of this function goes like this:
+
+-   The input (parameter) is the main category that we are interested in.
+
+-   The function then finds all the anchor links containing the category, extracts those links, cleans irrelevant links and duplicated links, then saves them into a variable.
+
+-   The function continues to extract sub-category links and product type links. The product types are subsection of the sub-category, therefore, we need to exclude them from the URL list to avoid scraping duplicated items.
+
+-   The cleaning of these links are done by detecting if the URL list of product type contains the sub-category. (For example, "afeitado" sub-category URL contains "es/hombre/afeitado". A product type of this sub-category is "despues afeitado" and its URL would be "es/hombre/afeitado/despeues-afeitado". The URL of "despues afeitado" contains URL of afeitado so we can base on that and exclude "afeitado" from the list)
+
+-   The function returns a vector of product type URLs and sub-categories with no product types URLs
+
+Using this function, we can obtain all the necessary URLs to scrape all the products of the main category divided by sub-categories and product types. Now we will move on to scrape the products of each URL.
+
 ```{r}
 #Load more items helper function
 load_all_items <- function() {
@@ -509,6 +535,12 @@ load_all_items <- function() {
 #test run
 # load_all_items()
 ```
+
+Navigating to the URL of the sub-categories and product types gives us a list of products. However, pages have a lot of products and not all are shown on the page. These products are hidden after the "Ver más productos" ("See more products") and we need to repeatedly click on the button until all the products are shown.
+
+Above, I created a function to click the button until the button is gone, meaning that all products have been loaded. There are pauses between each click to wait for the products to load. Since we don't know how many times we have to click the button, we use a `while` loop to click the button until there is no more button to click. When there is no more button, we would get an error if we tried to find the button so we use a `tryCatch()` function to catch and ignore this error.
+
+With this helper function to load all the products, we now can scale and go to all URL, load all the products, and scrape them.
 
 ```{r}
 #Get all product info helper function
@@ -559,6 +591,8 @@ hombre_products <- map_dfr(sub_cat_2_url, get_product_info)
 hombre_products
 ```
 
+Now, we need to get the information of the products. We will similarly create a helper function to streamline the process. The function I created take a URL for input, navigates to that URL, loads all the products using the function created previously, then it gets all the paths (nodes) of the `div` tags containing information about the products. After this, I nested a function to grab the product information from the `div` tags, which at the end returns the data frame of the product information, including brand name, product name, and price. Since categories, sub-categories, and product types are in other elements of the page, I grabbed them separately and append to the data frame to finally create a data frame with brand, product name, price, and full category columns consisting of main category, sub-category, and product type (if any) joined together by "-" (e.g., "Hombre-Afeitado-Después Afeitado").
+
 #### Scrape Multiple Categories
 
 ```{r}
@@ -582,11 +616,14 @@ all_products_clarel <- map_dfr(imp_cat ,scrape_all)
 write_csv(all_products_clarel, "datasets/clarel.csv")
 ```
 
-It took 8 minutes to scrape.
+With the helper functions created before, we have all the tools needed to scrape products from Clarel web page on a large scale (multiple categories). We create a vector with all the interested categories and a function to automate the scraping. This function navigates to the home page of Clarel, then extracts all URLs of sub-categories and product types of the main category input, and finally gets all the product information using the function from the last section to produce a final data frame. We use `map_dfr` to apply the function on the vector of interested categories and create a comprehensive data frame.
+
+At the time of writing this project, it took around 8 minutes to scrape the 4 categories hombre, higiene, cabello, and perfumes. I saved the scraped data into a csv file so for the analysis we would not have to repeat the scrape every time. Furthermore, if there are any changes to the web page and the functions no longer work, the analysis is still reproducible with the csv file.
 
 ### Data Cleaning
 
 ```{r}
+#loading the data frame from the file created after scraping
 all_products_clarel <- read_csv("datasets/clarel.csv")
 ```
 
@@ -611,6 +648,10 @@ gender_id <- function(str){
   
 }
 ```
+
+It is extremely tricky to identify which products are aimed at men or women (especially women) because most products do not include this information. They are more easily identified through the pictures and packaging choice (such as pink color and with a woman figure for women products) but since we work with only text we are very limited to the ability to identify to which gender the product is geared toward. Some products are in "Hombre" category so they are easily classified for men but the other categories do not clearly indicate gender. We will try to detect this information using keywords in the product names and sub-categories.
+
+Above, we created some lists of words that could indicate whether the products are for men or women or kids. We also try to identify kids products because later on we will discard them since it is not the scope of this project. We then put those lists into a function that takes a string as input and detects whether in the string there is any word from the list, then categorizes the string accordingly.
 
 ```{r}
 cleaned_clarel <- all_products_clarel %>% 
@@ -657,6 +698,16 @@ cleaned_clarel <- all_products_clarel %>%
   #Reorganise column names to join with other datasets
   select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
 ```
+
+As for most web scraping projects, the scraped data is usually messy and needs diligent cleaning so it is appropriate for analysis. The same goes for the data scraped here previously.
+
+First we remove the duplicated products since products in some categories overlap and therefore appear multiple times in the data set. We then split the full category into main category and sub-category (which also includes product types). We first replace the first "-" of the full category collumn with another symbol so we can split into 2 columns based on that symbol.
+
+Next, we extract the quantity from the product name. The product name contains various information from the product to brand name, quantity, and more. We extract the quantity using Regex and look for numbers followed by quantity symbol (ml, L, g, u/ud/uds). If the product name does not contain any of these, it is most possible that the product is sold as one unit whole. Therefore, after extracting products with specific quantities, we impute the missing rows with 1 unit.
+
+We then extract the unit of the quantity then calculate the average price based on the unit. For milliliter (ml), gram (g), and litter (l) the average price is per 100 ml or g. For products that are sold in more than 1 unit the average price is calculated as per unit. Lastly, they are rounded at 2 decimal places.
+
+Finally, we detect the gender for which the product aims. First, all products in category "Hombre" are named "Male" and then we use the gender identifying function from before to detect if the product name or product sub-category/product type indicates that it is for men or women or kids. Since few products are explicitly described as for women, we make another label called "Non-Male" to compare specifically male-targeted products versus non-male-targeted products. The gender column include 4 different labels (Male, Female, Kid, and Non-Male). The gender_2 column consists of only 2 (Male and Non-Male). These are made for the purpose of analysis.
 
 ## Data Joining
 
