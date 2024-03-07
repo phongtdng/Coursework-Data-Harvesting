@@ -22,6 +22,10 @@ library(scrapex)
 library(lubridate)
 library(dplyr)
 library(tidyr)
+library(purrr)
+library(ROSE)
+library(caret)
+library(broom)
 ```
 
 ## Mercadona
@@ -38,13 +42,15 @@ library(tidyr)
 
 ### Setting up RSelenium
 
+First, the user agent is being set to provide the website that is being scraped with the information of the scraper. This is done to allow the webmaster to contact the scraper in case she is causing any problems for the functioning of the website. 
+
 ```{r}
 set_config(
   user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Nienke Visscher / nienvis@gmail.com")
 )
 
 #Opening hidden browser
-remDr <- rsDriver(port = 4464L, browser = "firefox",  verbose=F, chromever = NULL)
+remDr <- rsDriver(port = 4466L, browser = "firefox",  verbose=F, chromever = NULL)
 
 
 merc <-"https://tienda.mercadona.es/categories"
@@ -89,6 +95,7 @@ driver$findElement(value = "(//button[@class = 'button button-primary button-big
 
 #Create an empty list to store the URLs 
 url <- list()
+Sys.sleep(1)
 
 #Navigate to the button 'Cuidado del cabello'
 driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado del cabello')])[1]")$clickElement()
@@ -346,120 +353,6 @@ mercadona$gender_2 <- case_when(
 
 ```
 
-## Mean comparisons
-
-### Categories
-
-```{r}
-
-#Compare all male and non-male products in the category "Cuidado del cabello" in ml, however impossible because no male products
-cat_1_m <- mercadona |> 
-  filter(cat_name == "Cuidado del cabello" & quantity_unit == "ml")
-
-prices_male <- cat_1_m$avg_price[cat_1_m$gender_2 == "Male"]
-prices_non_male <- cat_1_m$avg_price[cat_1_m$gender_2 == "Non-Male"]
-
-# Perform independent samples t-test
-t_test_result <- t.test(prices_male, prices_non_male, alternative = "greater")
-t_test_result
-
-#Compare all male and non-male products in the category "Cuidado del cabello" in ud
-cat_1_m_ud <- mercadona |> 
-  filter(cat_name == "Cuidado del cabello" & quantity_unit == "ud")
-
-prices_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Male"]
-prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
-
-# Perform independent samples t-test
-t_test_result <- t.test(prices_male, prices_non_male, alternative = "greater")
-t_test_result
-
-
-#Compare all male and non-male products in the category "Cuidado facial y corporal" in ml, however impossible because no male products
-cat_2_m <- mercadona |> 
-  filter(cat_name == "Cuidado facial y corporal" & quantity_unit == "ml")
-
-prices_male <- cat_2_m$avg_price[cat_2_m$gender_2 == "Male"]
-prices_non_male <- cat_2_m$avg_price[cat_2_m$gender_2 == "Non-Male"]
-
-# Perform independent samples t-test
-t_test_result <- t.test(prices_male, prices_non_male, alternative = "less")
-t_test_result
-
-
-#Compare all male and non-male products in the category "Cuidado facial y corporal" in ud, however impossible because no male products
-
-cat_2_m_ud <- mercadona |> 
-  filter(cat_name == "Cuidado facial y corporal" & quantity_unit == "ud")
-
-prices_male <- cat_2_m_ud$avg_price[cat_2_m_ud$gender_2 == "Male"]
-prices_non_male <- cat_2_m_ud$avg_price[cat_2_m_ud$gender_2 == "Non-Male"]
-
-# Perform independent samples t-test
-t_test_result <- t.test(prices_male, prices_non_male, alternative = "less")
-t_test_result
-
-library(broom)
-
-tidy(t.test(prices_male, prices_non_male, alternative = "less"))
-
-```
-
-```{r}
-library(dplyr)
-library(purrr)
-
-cat_f <- c("Cuidado del cabello")
-quan_f <- c("ud")
-
-
-t_test_fun <- function(cat_f, quan_f) {
-  cat_d <- mercadona %>%
-    filter(cat_name == cat_f & quantity_unit == quan_f)
-  
-  prices_male <- cat_d$avg_price[cat_d$gender_2 == "Male"]
-  prices_non_male <- cat_d$avg_price[cat_d$gender_2 == "Non-Male"]
-  
-  t_test_result <- NULL
-  
-  tryCatch({
-    t_test_result <- tidy(t.test(prices_male, prices_non_male))
-  }, error = function(e) {NA
-    
-    print(e)
-  })
-}
-
-
-t_test_fun(cat_f, quan_f)
-
-# Define combinations of cat_f and quan_f
-cat_f <- c("Cuidado del cabello", "Cuidado del cabello","Cuidado facial y corporal","Cuidado facial y corporal")
-quan_f <- c("ml", "ud", "ml", "ud")
-
-# Perform t-tests for all combinations
-t_test_results <- map2_dfr(cat_f, quan_f, t_test_fun)
-
-# Print or access the t-test results
-print(t_test_results)
-
-
-```
-
-### sub categories
-
-```{r}
-
-cat_1_1_m <- mercadona |> 
-  filter(subcat == "Cuidado del cabello" & quantity_unit == "ml")
-
-prices_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Male"]
-prices_non_male <- cat_1_m_ud$avg_price[cat_1_m_ud$gender_2 == "Non-Male"]
-
-# Perform independent samples t-test
-t_test_result <- t.test(prices_male, prices_non_male)
-t_test_result
-```
 
 ## Clarel
 
@@ -750,7 +643,12 @@ Finally, we detect the gender for which the product aims. First, all products in
 
 ```{r}
 #Modify mercadona dataframe to join
-mercadona_cleaned <- mercadona %>% select(-brand, -gender_name) 
+mercadona_cleaned <- mercadona |> 
+  select(-brand, -gender_name) |> 
+  mutate(store = "Mercadona")
+
+cleaned_clarel <- cleaned_clarel |> 
+  mutate(store = "Clarel")
 
 #Match column names
 colnames(cleaned_clarel) <- colnames(mercadona_cleaned)
@@ -781,6 +679,7 @@ match_cat <- function(str) {
 }
 
 #Join 2 dataset together
+
 big_df <- bind_rows(mercadona_cleaned, cleaned_clarel) %>% 
   #sub-category matching
   mutate(match_subcat = match_cat(subcat), .after = subcat) %>% 
@@ -788,4 +687,161 @@ big_df <- bind_rows(mercadona_cleaned, cleaned_clarel) %>%
   mutate(match_subcat = ifelse(is.na(match_subcat), match_cat(name), match_subcat)) %>% 
   #other subcats that have no match for either sub-cat and product name
   mutate(match_subcat = replace_na(match_subcat, "Other"))
+
+
+
+write_csv(big_df, "full_data.csv")
+full_data <- read_csv("full_data.csv")
 ```
+
+## Data balancing
+```{r}
+full_data |> 
+  ggplot(aes(x=gender_2)) +
+  geom_bar()
+
+full_data <-full_data |> 
+  drop_na()
+
+table(full_data$gender_2)
+prop.table(table(full_data$gender_2))
+
+df_balanced <- ovun.sample(gender_2~., data=full_data, method = "both",
+                    p = 0.5,
+                    seed = 123,
+                    N = 3600)$data #double of the train set
+table(df_balanced$gender_2)
+
+df_balanced |> 
+  ggplot(aes(x=gender_2)) +
+  geom_bar()
+
+
+```
+
+
+## Mean comparisons
+
+### Categories
+```{r}
+
+cat_f <- c("Higiene")
+quan_f <- c("ml")
+
+
+t_test_fun <- function(cat_f, quan_f) {
+  cat_d <- df_balanced |> 
+    filter(cat_name == cat_f & quantity_unit == quan_f)
+  
+  prices_male <- cat_d$avg_price[cat_d$gender_2 == "Male"]
+  prices_non_male <- cat_d$avg_price[cat_d$gender_2 == "Non-Male"]
+  
+  t_test_result <- NULL
+  
+  tryCatch({
+    t_test_result <- tidy(t.test(prices_male, prices_non_male, alternative = "less"))
+  }, error = function(e) {NA
+    
+  })
+}
+
+t_test_fun(cat_f, quan_f)
+
+cat_loop<- df_balanced |> 
+  distinct(cat_name)
+
+cat_loop <- as.list(cat_loop$cat_name)
+cat_loop <- unlist(cat_loop)
+cat_f <- rep(cat_loop, each = 2) 
+
+
+quan_f <- c("ml", "ud")
+quan_f <- rep(quan_f, times = 6)
+
+
+x <- list()
+
+for (i in seq_along(cat_f)) {
+  result <- t_test_fun(cat_f[i], quan_f[i])
+  x[[i]] <- result
+}
+
+# Combining the results into a data frame
+result_cat <- do.call(rbind, x)
+result_cat$category <- cat_f
+result_cat$quantity_unit <- quan_f
+
+result_cat<-result_cat |> 
+  select(category, quantity_unit, everything()) |> 
+  rename(diff_male_non_male = estimate, 
+         male = estimate1, 
+         non_male = estimate2,
+         t_statistic = statistic,
+         df = parameter) |> 
+  mutate(p.value = round(p.value, 3))
+  
+
+
+
+```
+
+### Sub-categories
+```{r}
+cat_f <- c("Champú")
+quan_f <- c("ml")
+
+
+t_test_fun <- function(cat_f, quan_f) {
+  cat_d <- df_balanced |> 
+    filter(subcat == cat_f & quantity_unit == quan_f)
+  
+  prices_male <- cat_d$avg_price[cat_d$gender_2 == "Male"]
+  prices_non_male <- cat_d$avg_price[cat_d$gender_2 == "Non-Male"]
+  
+  t_test_result <- NULL
+  
+  tryCatch({
+    t_test_result <- tidy(t.test(prices_male, prices_non_male))
+  }, error = function(e) {NA
+    
+  })
+}
+
+t_test_fun(cat_f, quan_f)
+
+cat_loop<- df_balanced |> 
+  distinct(subcat)
+
+cat_loop <- as.list(cat_loop$subcat)
+cat_loop <- unlist(cat_loop)
+cat_f <- rep(cat_loop, each = 2) #change
+
+
+quan_f <- c("ml", "ud")
+quan_f <- rep(quan_f, times = 6)#change
+
+
+x <- list()
+
+for (i in seq_along(cat_f)) {
+  result <- t_test_fun(cat_f[i], quan_f[i])
+  x[[i]] <- result
+}
+
+# Combining the results into a data frame
+result_df <- do.call(rbind, x)
+result_cat$sub_category <- cat_f
+result_cat$quantity_unit <- quan_f
+
+result_cat<-result_cat |> 
+  select(sub_category, quantity_unit, everything()) |> 
+   rename(diff_male_non_male = estimate, 
+         male = estimate1, 
+         non_male = estimate2,
+         t_statistic = statistic,
+         df = parameter) |> 
+  mutate(p.value = round(p.value, 3))
+```
+
+
+
