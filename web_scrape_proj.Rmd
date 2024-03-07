@@ -40,7 +40,6 @@ library(broom)
 
 ```
 
-
 ### Setting up RSelenium
 
 First, the user agent is being set to provide the website that is being scraped with the information of the scraper. This is done to allow the webmaster to contact the scraper in case she is causing any problems for the functioning of the website. 
@@ -654,8 +653,42 @@ cleaned_clarel <- cleaned_clarel |>
 #Match column names
 colnames(cleaned_clarel) <- colnames(mercadona_cleaned)
 
+#helper function
+match_cat <- function(str) {
+  str <- tolower(str)
+  
+  cat <- case_when(
+    str_detect(str, "afeitado") ~ "Afeitado",
+    str_detect(str, "champú") ~ "Champú",
+    str_detect(str, "acondicionador|mascarilla") ~ "Acondicionador y Mascarilla",
+    str_detect(str, "coloración|tinte") ~ "Coloración",
+    str_detect(str, "fija") ~ "Fijación cabello",
+    str_detect(str, "corporal") ~ "Cuidado corporal",
+    str_detect(str, "facial") ~ "Cuidado facial",
+    str_detect(str, "depilación") ~ "Depilación",
+    str_detect(str, "desodorante") ~ "Desodorante",
+    str_detect(str, "gel") ~ "Gel y Jabón",
+    str_detect(str, "higiene bucal") ~ "Higiene bucal",
+    str_detect(str, "higiene íntima") ~ "Higiene íntima",
+    str_detect(str, "manicura|pedicura") ~ "Manicura y Pedicura",
+    str_detect(str, "perfume") ~ "Perfume",
+    str_detect(str, "solar") ~ "Protector solar y aftersun"
+  )
+  
+  return(cat)
+}
+
 #Join 2 dataset together
-big_df <- bind_rows(mercadona_cleaned, cleaned_clarel)
+
+big_df <- bind_rows(mercadona_cleaned, cleaned_clarel) %>% 
+  #sub-category matching
+  mutate(match_subcat = match_cat(subcat), .after = subcat) %>% 
+  #match by product name if sub-cat doesn't match
+  mutate(match_subcat = ifelse(is.na(match_subcat), match_cat(name), match_subcat)) %>% 
+  #other subcats that have no match for either sub-cat and product name
+  mutate(match_subcat = replace_na(match_subcat, "Other"))
+
+
 
 write_csv(big_df, "full_data.csv")
 full_data <- read_csv("full_data.csv")
