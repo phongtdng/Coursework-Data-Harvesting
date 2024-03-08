@@ -42,21 +42,22 @@ library(broom)
 
 ### Setting up RSelenium
 
-First, the user agent is being set to provide the website that is being scraped with the information of the scraper. This is done to allow the webmaster to contact the scraper in case she is causing any problems for the functioning of the website. 
+First, the user agent is being set to provide the website that is being scraped with the information of the scraper. This is done to allow the webmaster to contact the scraper in case she is causing any problems for the functioning of the website. Then the background browser is being opened using the command 'rsDriver()'. The url of the supermarket Mercadona is loaded into a variable called 'merc' which is then inserted into the 'remDr$client$navigate()' function, to browse the Mercadona website in the background browser.
 
 ```{r}
+
+#Set the user agent
 set_config(
   user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36; Nienke Visscher / nienvis@gmail.com")
 )
 
 #Opening hidden browser
-remDr <- rsDriver(port = 4466L, browser = "firefox",  verbose=F, chromever = NULL)
+remDr <- rsDriver(port = 4467L, browser = "firefox",  verbose=F, chromever = NULL)
 
-
+#Loadingf the Mercadona url into the variable 'merc'
 merc <-"https://tienda.mercadona.es/categories"
-
-browseURL(prep_browser(merc))
  
+#Browsing to the website of Mercadona in the hidden browser
 remDr$client$navigate(merc)
 
 
@@ -66,7 +67,11 @@ remDr$client$navigate(merc)
 
 #### Clicking through opening page
 
+First, the function 'remDr\$client' is summarised into 'driver'. The following chunk should only be executed when the port is newly initiated. Before one is allowed to browse the Mercadona website, the cookies need to be accepted and a postal code needs to be inserted. After each clickElement(), a system sleep of 1 second is included to avoid errors coming from the code running faster than selenium is able to browse.
+
 ```{r}
+
+#Summarising the function'remDr$client' into 'driver'
 driver <- remDr$client
 
 #Note following only when having newly initiated the port
@@ -85,9 +90,13 @@ codigo$sendKeysToElement(list("28014"))
 #Click 
 driver$findElement(value = "(//button[@class = 'button button-primary button-big'])[1]")$clickElement()
 
+Sys.sleep(1)
+
 ```
 
 #### Obtain the URLs per category
+
+The two categories that will we scraped from the Mercadona website for this assignment are 'Cuidado del cabello' and 'Cuidado facial y corporal'. Due to the structuring on the website, HTML code for each subcategory within the two main categories only becomes visible when changing to the url of this specific subcategory. Therefore, the urls for each subcategory need to be extracted to be able to read the html code. To do so, one loop per main category is created. First, one needs to create an empty list to store the urls. Then, using the function 'driver\$findElement()' one navigates to the button of the first category 'Cuidado del cabello' and clicks on this button using the function 'clickElement()'. Now, the category 'Cuidado del cabello' as well as the first subcategory are entered and the url is extracted using the function 'driver\$getCurrentUrl()' and is stored in the url list. The category 'Cuidado del cabello' has three more subcategories left that need to be scraped. When one scrolls down to the end of the page of the subcategory, one finds a button which directs the user to the next sub category. Using a 'for loop', this button is clicked and the url of this next subcategory is saved in the url list. When the list includes 4 urls, the loop terminates. This method is repeated for the second category. Two seperate loops have to be initiated as the html code of the subcategories does not allow clicking on the side navigation bar to navigate to the next category. When all urls are collected in the url list, the function unlist() is utilised to convert to an unnested list.
 
 ```{r}
 
@@ -95,30 +104,32 @@ driver$findElement(value = "(//button[@class = 'button button-primary button-big
 
 #Create an empty list to store the URLs 
 url <- list()
-Sys.sleep(1)
 
 #Navigate to the button 'Cuidado del cabello'
 driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado del cabello')])[1]")$clickElement()
 
-#Use system sleep to avoid code running faster than the internet
+#Use system sleep to avoid code running faster than the browsing
 Sys.sleep(1)
 
 #Store the first URL
 url[1] <-driver$getCurrentUrl()
 
-#Create a loop to click on the button at the end of the page to naviagte to the next category and save the url
+#Create a loop to click on the button at the end of the page to naviagte to the next subcategory and save the url
 for (i in (2:4)){
-  
+ 
+#Find the button at the end of the page and click to navigate to the next subcategory
   driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
   
+#Use system sleep to avoid code running faster than the browsing
 Sys.sleep(1)
   
-  url[i] <-driver$getCurrentUrl()
+#Grab the url and store the url in the url list
+url[i] <-driver$getCurrentUrl()
   
   
 }
 
-#Get URLs Cuidado facial y corporal
+#Get URLs 'Cuidado facial y corporal'
   
 driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado facial y corporal')])[1]")$clickElement()
 
@@ -147,6 +158,8 @@ url <-unlist(url)
 
 ### Scraping and cleaning data
 
+In the following chunk, the html code for each subcategory is collected, the needed data is extracted, cleaned and consequently added to a data frame. First, the function navigates to one of the urls in the url list. A system sleep is ultilised to avoid the code running faster than the browsing which will cause errors. Then, the html code is collected using the function 'driver\$getPageSource()' and is read using the function read_html(). At this point, the html code is stored in the 'cat_html' variable and can be navigated using functions from the 'xml2' package. Hereafter, the data of the products is stored in the variable 'cat_info' by first finding the correct tag which stores the data with the function 'xml_find_all()', and consequently converting the tag to text using the function xml_text(). This method is repeated to collect the names of the subcategories. The xml text strings containing the data of the products is cleaned and separated into smaller strings. First the strings are separated by inserting a / in the places where the string needs to be split using the 'str_replace_all()' function and consequently splitting the string according to the / sign. The strings are splitted into a name, quantity, quantity unit and price. Then, these substrings are added to a data frame together with the subcategory strings. Finally, the function 'map_dfr()' is used to loop all urls in the url list over the function 'cat_grabber' resulting in a data frame containing data on all the products of the categories 'Cuidado del cabello' and 'Cuidado facial y corporal' of the supermarket chain Mercadona.
+
 ```{r}
 
 #Create function
@@ -155,7 +168,7 @@ cat_grabber <- function(url){
 #Navigate to one of the URLs stored in the variable URL
 driver$navigate(url)
   
-#Use system sleep to avoid code running faster than the internet
+#Use system sleep to avoid code running faster than the browsing
 Sys.sleep(1)
 
 #Get the page source code and read the html
@@ -174,26 +187,44 @@ subcat_name <- cat_html |>
 
 #Clean and separate data using regex
 cat_clean<-cat_info|> 
-  str_replace_all("\\€ |/|\\.|!", "") |>
+#Replace all €, /, . or ! signs with an empty space
+  str_replace_all("\\€ |/|\\.|!", "") |> 
+#Replace all € signs followed by 1 or more digits, followed by a comma and again   by one or more digits with an empty space
   str_replace_all("\\€\\d+,\\d+", "") |>
+#Replace ml with /ml/ when looking backwards finding first an empty space and then a digit
   str_replace_all("(?<=\\d\\s)ml", "/ml/") |> 
+#Replace ud with /ud/ when looking backwards finding first an empty space  followed by a digit
   str_replace_all("(?<=\\d\\s)ud", "/ud/") |> 
+#Replace ud with /ud/ when looking backwards finding first 0,1 or 2 empty spaces followed by a digit
   str_replace_all("(?<=\\d\\s{0,2})ud", "/ud/") |> 
+#Replace L with /L/ when looking backwards finding first an empty space followed by a digit
   str_replace_all("(?<=\\d\\s)L", "/L/") |> 
+#Replace 'tarro' with an empty space when looking backwards finding first an empty space followed by a digit
   str_replace_all("(?<=\\d\\s)tarro", "") |> 
+#Replace g followed by an empty space with /g/ when looking backwards finding first an empty space followed by a digit
   str_replace_all("(?<=\\d\\s)g\\s", "/g/") |> 
+#Replace g with /g/ when looking backwards finding first an empty space followed by a digit
   str_replace_all("(?<=\\d\\s)g", "/g/") |> 
+#Replace 'sobres' with /sobres/ when looking backwards finding first an empty space followed by a digit
   str_replace_all("(?<=\\d\\s)sobres", "/sobres/") |> 
+#Replace 'bandas' with /bandas/ when looking backwards finding first an empty space followed by a digit
   str_replace_all("(?<=\\d\\s)bandas", "/bandas/") |> 
-  str_replace_all("(?<=sensibleCaja\\s)1", "/") |> 
+#Replace '1' with / when looking backwards finding first an empty space followed by the word DovePaquete
+  str_replace_all("(?<=sensibleCaja\\s)1", "/") |>
+#Replace '4' with / when looking backwards finding first an empty space followed by the word DovePaquete
   str_replace_all("(?<=DovePaquete\\s)4", "/") |> 
+#Replace ud. with an empty space when looking foreward finding 0 or more empty spaces followed by ()
   str_replace_all("ud.(?=\\s*\\()", "") |> 
+#Replace an empty space with an / when looking foreward finding 1 or more digits followed by 0 or more empty spaces and a / 
   str_replace_all("\\s(?=\\d+\\s*/)", "/") |> 
+#Replace a lower case letter followed by a digit with /
   str_replace_all("(?<=[[:lower:]])(?=[[:digit:]])", "/") |> 
+#Replace a literal ( or a literal ) with an empty space
   str_replace_all("\\(|\\)", "") |> 
+#Replace all literal . with an empty space
   str_replace_all("\\.", "")|> 
+#Split the strings by /
   strsplit("/")
-
 
 
 #Only keep the variables with 5 or less strings
@@ -222,20 +253,25 @@ final <- map_dfr(url, cat_grabber)
 
 ### Scrape and add main categories to data frame
 
+To scrape and add the main categories to the data frame, the function 'driver\$navigate()' is used to navigate to first url in the list which is the home page including all main categories. Then, the html code is collected and read using the functions 'driver\$getPageSource()' and 'read_html()'. The function 'xml_find_all()' is used to find the correct tag followed by the use of the xml_text() function in order to convert the tag into text which is stored in the variable 'cat'. The category 'Cuidado del cabello' and 'Cuidado facial y corporal' are stored in the 14th and 15th position of the list respectively. Consequently, the categories are addes to the data frame by matching to their subcategories.
+
 ```{r}
 
+#Navigate to the first url
 driver$navigate(url[1])
   
 Sys.sleep(1)
 
+#Grab the html code and read the html to make it accessible to functions from the 'XML2' package
 cat_html <-driver$getPageSource()[[1]] |>
   read_html() 
 
+#Collect the category names 
 cat <- cat_html |> 
    xml_find_all("//label[@class='subhead1-r']") |>
    xml_text()
 
-
+#Add the category names to the data frame
 final <- final |> 
   mutate(cat_name = ifelse((subcat=="Acondicionador y mascarilla"|
                               subcat== "Champú"|
@@ -352,7 +388,6 @@ mercadona$gender_2 <- case_when(
 
 
 ```
-
 
 ## Clarel
 
@@ -695,6 +730,7 @@ full_data <- read_csv("full_data.csv")
 ```
 
 ## Data balancing
+
 ```{r}
 full_data |> 
   ggplot(aes(x=gender_2)) +
@@ -719,10 +755,10 @@ df_balanced |>
 
 ```
 
-
 ## Mean comparisons
 
 ### Categories
+
 ```{r}
 
 cat_f <- c("Higiene")
@@ -786,6 +822,7 @@ result_cat<-result_cat |>
 ```
 
 ### Sub-categories
+
 ```{r}
 cat_f <- c("Champú")
 quan_f <- c("ml")
@@ -842,6 +879,3 @@ result_cat<-result_cat |>
          df = parameter) |> 
   mutate(p.value = round(p.value, 3))
 ```
-
-
-
