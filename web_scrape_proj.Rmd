@@ -253,7 +253,7 @@ final <- map_dfr(url, cat_grabber)
 
 ### Scrape and add main categories to data frame
 
-To scrape and add the main categories to the data frame, the function 'driver\$navigate()' is used to navigate to first url in the list which is the home page including all main categories. Then, the html code is collected and read using the functions 'driver\$getPageSource()' and 'read_html()'. The function 'xml_find_all()' is used to find the correct tag followed by the use of the xml_text() function in order to convert the tag into text which is stored in the variable 'cat'. The category 'Cuidado del cabello' and 'Cuidado facial y corporal' are stored in the 14th and 15th position of the list respectively. Consequently, the categories are addes to the data frame by matching to their subcategories.
+To scrape and add the main categories to the data frame, the function 'driver\$navigate()' is used to navigate to first url in the list which is the home page including all main categories. Then, the html code is collected and read using the functions 'driver\$getPageSource()' and 'read_html()'. The function 'xml_find_all()' is used to find the correct tag followed by the use of the xml_text() function in order to convert the tag into text which is stored in the variable 'cat'. The category 'Cuidado del cabello' and 'Cuidado facial y corporal' are stored in the 14th and 15th position of the list respectively. Consequently, the categories are added to the data frame by matching to their subcategories.
 
 ```{r}
 
@@ -287,6 +287,8 @@ final <- final |>
 ```
 
 ### Brands
+
+In the chunk below, the brand names are extracted. The brand names are included into the name of the product without a clear or reoccurring structure. Therefore, no regex could be applied to extract these brand names. For this reason, the different brand names in the data are identified by hand and collected into a vector. Then, this vector is collapsed into a string called 'brands_or', separating the brand names by an \| sign. This string is used to extract the brand names from the product names using the function 'str_extract_all()' and these extractions are added to a new column called 'brand'.
 
 ```{r}
 
@@ -328,6 +330,8 @@ final$brand <- str_extract_all(final$name, regex(brands_or, ignore_case = TRUE))
 
 ### Average prices
 
+As the prices of the products are for different quantities which are measured in different units, the prices of the products need to be standardised for them to be comparable. Hence, the price of liquid products are converted to the price of this product per 100 ml, the prices of products measured in grams are converted to the price per 100 grams, and the price of products measured in units are converted to the price of 1 unit. The latter is done using the function 'case_when()' and applying the correct converting formula to the price, based on the detected measurement unit using the function 'str_detect()'.
+
 ```{r}
 units <- c("L", "ml", "ud", "sobres", "bandas", "g")
 
@@ -348,11 +352,13 @@ mercadona <- final |>
 
 ### Gender product
 
+In the following chunk, the targeted gender of the product is extracted and added to a new column in the data frame. First, different words that indicate gender are added to a vector called 'gender' which is then collapsed into a string separating the words by an \| sign. As both the name of the product as well as the subcategory name can contain information on the gender, these two columns are temporarily combined into the variable 'combine'. Then, the function 'str_extract()' is used to extract the gender names from the 'combined' variable and the names are stored in the variable 'gender_name'. When no gender is detected, the products is assigned NA which are then renamed as 'non-male'. Hereafter, two separate vectors inlcuding male and female words are created. These vectors are used to assign 'Male', 'Female' or 'Non-male' to the products through applying the function case_when() and is stored in the variable 'gender'. Then, this process is repeated again but this time only assigning 'male' or 'non-male' to products.
+
 ```{r}
 #Vector of words indicating gender
 gender <-c("Men", "Women", "Man", "Woman", "Hombre", "Mujer", "Hombres", "Mujeres", "Him", "Her", "Niña", "Niñas", "Homme", "Femme", "Male", "Female", "Males", "Females", "Venus") 
 
-#Collapsing the gender vector to 
+#Collapsing the gender vector to a string 
 gender_or <- paste(gender, collapse = "|")
 
 mercadona <-mercadona |> 
@@ -361,7 +367,6 @@ mercadona <-mercadona |>
   select(-combined)
 
 # Convert NA to 'Non-Male'
-
 mercadona$gender_name[is.na(mercadona$gender_name)] <- "Non-Male"
 
 
@@ -380,7 +385,7 @@ mercadona$gender <- case_when(
   mercadona$gender_name %in% female|mercadona$subcat %in% female ~ "Female",
   mercadona$gender_name == "Non-Male"~ "Non-Male")
 
-#Assign gender to products (separate column for female)
+#Assign male or non-male to products
 mercadona$gender_2 <- case_when(
   mercadona$gender == "Male" ~ "Male",
   mercadona$gender == "Female" ~ "Non-Male",
@@ -723,13 +728,21 @@ big_df <- bind_rows(mercadona_cleaned, cleaned_clarel) %>%
   #other subcats that have no match for either sub-cat and product name
   mutate(match_subcat = replace_na(match_subcat, "Other"))
 
+```
 
+### Saving the data
 
+Given that the html code of the websites might change which will cause the scraping code to stop functioning, the full data frame is stored in a csv file names 'full_data.csv'. Then, the csv file is loaded back into R to continue with the analysis.
+
+```{r}
 write_csv(big_df, "full_data.csv")
 full_data <- read_csv("full_data.csv")
+
 ```
 
 ## Data balancing
+
+Given that the data set is rather unbalanced with regards to the number of 'male' and 'non-male' products, the data set is balanced based on the 'gender_2' variable. The balancing method applied both undersamples the majority class and oversamples the minority class to generate a data set in which approximately half of the cases are from the original majority class and half of the cases of the original minority class. This balancing is necessary for the application of t-test to compare the price means of the 'male' and 'non-male' category.
 
 ```{r}
 full_data |> 
@@ -757,7 +770,13 @@ df_balanced |>
 
 ## Mean comparisons
 
+In this section, the prices between male and non-male products are compared with each category and subcategory.
+
 ### Categories
+
+To start, a function is created within which first a data set is created named 'cat_d' which is the 'df_balanced' but filtered by a specific combination of the category name and the quantity unit. Then, the standardised price ('avg_price') is filtered by 'male' and 'non-male' and stored in the variables 'prices_male' and 'prices_non-male' respectively. Hereafter, an empty variable named 't_test_result' is created to later store the results from the t-test analyses and the t-test function is inserted within a 'tryCatch()' function as not all t-tests will be valid and generate results. When the t-test failed, the results are assigned NA and the function continues. The t-test function tests whether the prices of the male products are significantly lower then the prices of non-male products. The function 'tidy()' is used to convert the output of the t-test into a tibble.
+
+Once the function is correctly specified, a loop function is created to apply the function to all combinations of category and quantity unit. The unique category names are saved into a data frame named 'cat_loop' using the function 'dinstinct()'. Then, the column 'cat_name' from the 'cat_loop' data frame is converted into a nested list by applying the 'as.list()' function and is then unnested through the function 'unlist()'. As each category will be tested per quantity unit, a new list names 'cat_f' is created in which the category names are duplicated using the 'rep()' function. A vector called 'quan_f' is created in which the two main quantity units 'ml' and 'ud' are alternating repeated both 6 times. An empty list named 'x' is created to store the results of the t-test. Hereafter, a loop is created which applies the 't-test-fun' to the items in the 'cat_f' and 'quan_f' vectors. All tibbles containing the results of the different t-test are combined into one data frame named 'result_cat' using the function 'do.call()' in combination with 'rbind()'. The corresponding categories and units are added to the 'result_cat' data frame to enhance interpretability. Then, this data frame is cleaned by properly renaming the columns and organising the columns in a more logical order.
 
 ```{r}
 
@@ -822,6 +841,8 @@ result_cat<-result_cat |>
 ```
 
 ### Sub-categories
+
+The method for obtaining the t-test results is repeated with minor adjustments to obtain the t-test results for the sub-categories. The data is filtered based on the subcategory
 
 ```{r}
 cat_f <- c("Champú")
