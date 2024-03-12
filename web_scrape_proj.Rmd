@@ -18,6 +18,8 @@ library(httr)
 library(sf) #Do we use this
 library(ROSE)
 library(broom)
+library(glue)
+library(dplyr)
 ```
 
 ## Read Me
@@ -126,7 +128,7 @@ set_config(
 )
 
 #Opening hidden browser
-remDr <- rsDriver(port = 4467L, browser = "firefox",  verbose=F, chromever = NULL)
+remDr <- rsDriver(port = 4468L, browser = "firefox",  verbose=F, chromever = NULL)
 
 #Loadingf the Mercadona url into the variable 'merc'
 merc <-"https://tienda.mercadona.es/categories"
@@ -740,7 +742,7 @@ cleaned_clarel <- all_products_clarel %>%
   #Remove products for kids
   filter(gender != "Kid") %>% 
   #Reorganise column names to join with other datasets
-  select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
+  dplyr::select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
 ```
 
 As for most web scraping projects, the scraped data is usually messy and needs diligent cleaning so it is appropriate for analysis. The same goes for the data scraped here previously.
@@ -804,14 +806,21 @@ big_df <- bind_rows(mercadona_cleaned, cleaned_clarel) %>%
 
 ```
 
+```{r}
+big_df <- big_df |> 
+  mutate(type_brand = ifelse(brand == "Deliplus"|brand == "NESK"|brand == "BONTE" ~"Housebrand", "Brand"))
+```
+
 ### Saving the data
 
 Given that the html code of the websites might change which will cause the scraping code to stop functioning, the full data frame is stored in a csv file names 'full_data.csv'. Then, the csv file is loaded back into R to continue with the analysis.
 
 ```{r}
 write_csv(big_df, "full_data.csv")
+
 full_data <- read_csv("full_data.csv")
 
+df_balanced <- full_data
 ```
 
 ## Data balancing
@@ -900,14 +909,18 @@ result_cat <- do.call(rbind, x)
 result_cat$category <- cat_f
 result_cat$quantity_unit <- quan_f
 
-result_cat<-result_cat |> 
+result<-result_cat |> 
   select(category, quantity_unit, everything()) |> 
   rename(diff_male_non_male = estimate, 
          male = estimate1, 
          non_male = estimate2,
          t_statistic = statistic,
          df = parameter) |> 
-  mutate(p.value = round(p.value, 3))
+  mutate(p.value = round(p.value, 3)) |>  
+  drop_na() 
+
+resul_sig <- result |> 
+  filter(p.value <=0.05)
   
 
 
@@ -925,7 +938,7 @@ quan_f <- c("ml")
 
 t_test_fun <- function(cat_f, quan_f) {
   cat_d <- df_balanced |> 
-    filter(subcat == cat_f & quantity_unit == quan_f)
+    filter(match_subcat == cat_f & quantity_unit == quan_f)
   
   prices_male <- cat_d$avg_price[cat_d$gender_2 == "Male"]
   prices_non_male <- cat_d$avg_price[cat_d$gender_2 == "Non-Male"]
@@ -942,15 +955,15 @@ t_test_fun <- function(cat_f, quan_f) {
 t_test_fun(cat_f, quan_f)
 
 cat_loop<- df_balanced |> 
-  distinct(subcat)
+  distinct(match_subcat)
 
-cat_loop <- as.list(cat_loop$subcat)
+cat_loop <- as.list(cat_loop$match_subcat)
 cat_loop <- unlist(cat_loop)
-cat_f <- rep(cat_loop, each = 2) #change
+cat_f <- rep(cat_loop, each = 2) 
 
 
 quan_f <- c("ml", "ud")
-quan_f <- rep(quan_f, times = 6)#change
+quan_f <- rep(quan_f, times = 16)
 
 
 x <- list()
@@ -962,17 +975,24 @@ for (i in seq_along(cat_f)) {
 
 # Combining the results into a data frame
 result_df <- do.call(rbind, x)
-result_cat$sub_category <- cat_f
-result_cat$quantity_unit <- quan_f
+result_df$match_subcat <- cat_f
+result_df$quantity_unit <- quan_f
 
-result_cat<-result_cat |> 
-  select(sub_category, quantity_unit, everything()) |> 
+
+
+
+result<-result_df |> 
+  select(match_subcat, quantity_unit, everything()) |> 
    rename(diff_male_non_male = estimate, 
          male = estimate1, 
          non_male = estimate2,
          t_statistic = statistic,
          df = parameter) |> 
-  mutate(p.value = round(p.value, 3))
+  mutate(p.value = round(p.value, 3)) |> 
+  drop_na() 
+
+resul_sig <- result |> 
+  filter(p.value <=0.05)
 ```
 
 ## Discussion and conclusion
