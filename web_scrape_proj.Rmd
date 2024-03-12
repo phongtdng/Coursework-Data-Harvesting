@@ -1,6 +1,6 @@
 ---
-title: "Pink Tax Spain"
-author: "Phong Duong, Nienke Visscher"
+title: "Scraping data on personal health products from Mercadona and Clarel to determine price differences between male and non-male marketed products"
+author: "Phong Duong, Rianne Nienke Visscher"
 date: "2024-02-15"
 output: html_document
 editor_options: 
@@ -13,32 +13,106 @@ editor_options:
 library(xml2)
 library(tidyverse)
 library(RSelenium)
-library(glue)
-library(magrittr)
+library(magrittr) #? do we use this, also insf package
 library(httr)
-library(sf)
-library(rnaturalearth)
-library(scrapex)
-library(lubridate)
-library(dplyr)
-library(tidyr)
-library(purrr)
+library(sf) #Do we use this
 library(ROSE)
-library(caret)
 library(broom)
 ```
 
+## Read Me
+
+1.  Title: Scraping data on personal health products from Mercadona and Clarel to determine price differences between male and non-male marketed products
+
+2.  Project description
+
+    > This assignment aims to investigate price differences in personal care products in Spain. More specifically, are male personal care products priced differently compared to non-male products? To obtain the data needed for this analysis, data on personal health care products is scraped from the website of Mercadona and Clarel, a large Spanish supermarket and drugstore chain respectively. Then, mean comparisons are performed to determine any price differences between male and non-male products for different types of personal health products.
+
+3.  Table of contents
+
+    1.  Introduction
+    2.  Libraries
+    3.  Mercadona
+        1.  Setting up RSelenium
+        2.  Obtaining URLs
+        3.  Scraping and cleaning data
+        4.  Extracting brand names
+        5.  Standardising prices
+        6.  Assigning marketed gender to product
+    4.  Clarel
+        1.  Data collection
+            1.  Main webpage
+            2.  Scrape Hombre Category
+            3.  Scrape Multiple Categories
+        2.  Data cleaning
+    5.  Data joining
+    6.  Data balancing
+    7.  Mean comparisons
+    8.  Discussion and conclusion
+
+4.  Technologies used
+
+    > The coding language used to create this project is R.
+
+5.  Requirements
+
+    > To run the code in this project one needs to have installed the follwoing packages in R:
+    >
+    > -   [Tidyverse](https://cran.r-project.org/web/packages/tidyverse/index.html): Ecosystem of Packages designed for data science in R (glue, purrr)
+    >
+    > -   [xml2:](https://cran.r-project.org/web/packages/xml2/index.html) R package to handle xml files
+    >
+    > -   [RSelenium](https://cran.r-project.org/web/packages/RSelenium/index.html): R package providing bindings for the 'Selenium 2.0 WebDriver'. This package allows navigating a website using a driver immitating a regular user. Trough this navigation, one is able to collect html code from websites which would otherwise be hidden.
+    >
+    > -   [httr:](https://cran.r-project.org/web/packages/httr/index.html) Package including tools for working with URLs and HTTP
+    >
+    > -   [ROSE:](https://cran.r-project.org/web/packages/ROSE/index.html) *Random Over-Sampling Examples.* This package contains tools to apply a combination of under- and over-sampling techniques to balance unbalanced data sets
+    >
+    > -   [Broom:](https://cran.r-project.org/web/packages/broom/index.html) Package to convert statistical sbjects into tidy tibbles
+    >
+    > All packages used in this assignment can be downloaded into R using the function install.packages(). For example:
+    >
+    > ```{r}
+    > #| eval: false
+    >     >
+    > install.packages("tidyverse")
+    > ```
+
+    > To use the package RSelenium, JAVA needs to be downloaded on the used device and correctly attached to the R. This can be done using the following code
+    >
+    > ```{r}
+    > #| eval: false
+    >     >
+    > Sys.getenv("JAVA_HOME")
+    > Sys.setenv(JAVA_HOME = "path/Oracle/Java/javapath/java.exe")
+    > Sys.getenv("PATH")
+    > install.packages("RSelenium", dependencies = TRUE)
+    >     >
+    > ```
+
+    > To scrape websites ethically, one needs to set a configuration to indicate who is scraping the website and allow the owners of the website to contact the scraper in case the scraper is causing any issues to the website. Therefore, before running the code, one needs to fill in the user agent in the following piece of code. One can obtain the user agent by simply asking the google search engine 'What is my user agent?'
+    >
+    > ```{r}
+    > #| eval: false
+    >     >
+    > set_config(
+    >   user_agent("")
+    > )
+    > ```
+    >
+    > Note that when setting the rsdriver, one might needs to make some adjustments to the code. If the port is occupied, simply insert a different number and change the browser to the browser installed in the device used to run the code. In the developers case of this project, the browser 'Chrome' did not function well. Therefore, consider [downloading the browser Firefox](https://www.mozilla.org/en-US/firefox/new/) in case Chrome does not perform well.
+    >
+    > ```{r}
+    > remDr <- rsDriver(port = 4467L, browser = "firefox",  verbose=F, chromever = NULL)
+    > ```
+
+## Introduction
+
+When one strolls trough the isles with personal care products in a drug store or the supermarket, one will notice that products are clearly targeted at men or women. One will also notice that tehd majority of the isle is coloured pink, as the majority of personal care products are specifically marketed towards women. However, something one might not directly remarks is that these pink products are higher priced compared to the blue male targeted products. This overpricing of female products is known as the 'Pink tax' and is prevelent among all sorts of products ranging from clothing to toys (Economic Committee United States Congress, 2016). Guittar et al. (2022) researched this *pink tax* of personal health products in the US and find that women tend to pay more for products such as deoderants and lotions, whereas men tend to pay more for shaving gels. This assignment aims to investigate price differences in personal care products in Spain. More specifically, are male personal care products priced differently compared to non-male products? To obtain the data needed for this analysis, data on personal health care products is scraped from the website of Mercadona and Clarel, a large Spanish supermarket and drugstore chain respectively. Then, mean comparisons are performed to determine any price differences between male and non-male products for different types of personal health products. Unfortunately, the structure of the obained data does not allow to investigate price differences between male and female marketed products as the identification of the gender marketed of these products is done using the product or category name which contain information on the gender when it involves a male marketed product but not when it involves a female marketed products. Future research can utilise image detection methods to indicate the gender of the products which is out of the scope of this assignment.
+
+This assignment is structured as follows: first the data on the personal health product from the Mercadona and the Clarel website are scraped and cleaned and added to a data frame. Then, the data is balanced after which t-test will be utilised to examine the price differences.
+
 ## Mercadona
-
-```{r}
-
-#Code for attaching JAVA
-#Sys.getenv("JAVA_HOME")
-#Sys.setenv(JAVA_HOME = "C:/Program Files/Common Files/Oracle/Java/javapath/java.exe")
-#Sys.getenv("PATH")
-#install.packages("RSelenium", dependencies = TRUE)
-
-```
 
 ### Setting up RSelenium
 
@@ -251,7 +325,7 @@ final <- map_dfr(url, cat_grabber)
 
 ```
 
-### Scrape and add main categories to data frame
+#### Scrape and add main categories to data frame
 
 To scrape and add the main categories to the data frame, the function 'driver\$navigate()' is used to navigate to first url in the list which is the home page including all main categories. Then, the html code is collected and read using the functions 'driver\$getPageSource()' and 'read_html()'. The function 'xml_find_all()' is used to find the correct tag followed by the use of the xml_text() function in order to convert the tag into text which is stored in the variable 'cat'. The category 'Cuidado del cabello' and 'Cuidado facial y corporal' are stored in the 14th and 15th position of the list respectively. Consequently, the categories are added to the data frame by matching to their subcategories.
 
@@ -286,7 +360,7 @@ final <- final |>
   dplyr::select(-ud)
 ```
 
-### Brands
+### Extracting brand names
 
 In the chunk below, the brand names are extracted. The brand names are included into the name of the product without a clear or reoccurring structure. Therefore, no regex could be applied to extract these brand names. For this reason, the different brand names in the data are identified by hand and collected into a vector. Then, this vector is collapsed into a string called 'brands_or', separating the brand names by an \| sign. This string is used to extract the brand names from the product names using the function 'str_extract_all()' and these extractions are added to a new column called 'brand'.
 
@@ -328,7 +402,7 @@ final$brand <- str_extract_all(final$name, regex(brands_or, ignore_case = TRUE))
 
 ```
 
-### Average prices
+### Standardising prices
 
 As the prices of the products are for different quantities which are measured in different units, the prices of the products need to be standardised for them to be comparable. Hence, the price of liquid products are converted to the price of this product per 100 ml, the prices of products measured in grams are converted to the price per 100 grams, and the price of products measured in units are converted to the price of 1 unit. The latter is done using the function 'case_when()' and applying the correct converting formula to the price, based on the detected measurement unit using the function 'str_detect()'.
 
@@ -350,7 +424,7 @@ mercadona <- final |>
 
 ```
 
-### Gender product
+### Assigning marketed gender to product
 
 In the following chunk, the targeted gender of the product is extracted and added to a new column in the data frame. First, different words that indicate gender are added to a vector called 'gender' which is then collapsed into a string separating the words by an \| sign. As both the name of the product as well as the subcategory name can contain information on the gender, these two columns are temporarily combined into the variable 'combine'. Then, the function 'str_extract()' is used to extract the gender names from the 'combined' variable and the names are stored in the variable 'gender_name'. When no gender is detected, the products is assigned NA which are then renamed as 'non-male'. Hereafter, two separate vectors inlcuding male and female words are created. These vectors are used to assign 'Male', 'Female' or 'Non-male' to the products through applying the function case_when() and is stored in the variable 'gender'. Then, this process is repeated again but this time only assigning 'male' or 'non-male' to products.
 
@@ -794,7 +868,7 @@ t_test_fun <- function(cat_f, quan_f) {
   t_test_result <- NULL
   
   tryCatch({
-    t_test_result <- tidy(t.test(prices_male, prices_non_male, alternative = "less"))
+    t_test_result <- tidy(t.test(prices_male, prices_non_male))
   }, error = function(e) {NA
     
   })
@@ -842,7 +916,7 @@ result_cat<-result_cat |>
 
 ### Sub-categories
 
-The method for obtaining the t-test results is repeated with minor adjustments to obtain the t-test results for the sub-categories. The data is filtered based on the subcategory
+The method for obtaining the t-test results is repeated with minor adjustments to obtain the t-test results for the sub-categories. The data is filtered based on the subcategory. Also, the number of repetitions of the quantity units are changed according to the number of subcategories
 
 ```{r}
 cat_f <- c("Champú")
@@ -900,3 +974,17 @@ result_cat<-result_cat |>
          df = parameter) |> 
   mutate(p.value = round(p.value, 3))
 ```
+
+## Discussion and conclusion
+
+[Discussion results mean comparison]
+
+### Limitations
+
+As mentioned in the introduction, the analysis performed above could be greatly improved whne the detection of gender is done using image recognition methods rather than assigning by gender based on the name or descrtiption of the product as the latter often only contain information on gender in the case of male marketed products. However, the design of the product often clearly conveys whether the product is targeted at men or women trough for example the use of colour. Moreover, attributes that contribute to price differences such as the quality or whether the product is a brand or a house brand has not been included in this analysis. It is possible that the distribution of attributes is different for male and female products which influences the mean price of these products. Furthermore, it is advisable to include a larger number of stores to avoid the impact of store specific differences.
+
+## Bibliography
+
+Economic Committee United States Congress (2016). Retrieved March 11, 2024, <https://www.jec.senate.gov/public/_cache/files/8a42df04-8b6d-4949-b20b-6f40a326db9e/the-pink-tax---how-gender-based-pricing-hurts-women-s-buying-power.pdf>
+
+Guittar, S. G., Grauerholz, L., Kidder, E. N., Daye, S. D., & McLaughlin, M. (2022). Beyond the pink tax: gender-based pricing and differentiation of personal care products. *Gender Issues*, *39*(1), 1-23.
