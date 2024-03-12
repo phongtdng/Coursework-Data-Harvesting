@@ -150,6 +150,8 @@ First, the function 'remDr\$client' is summarised into 'driver'. The following c
 #Summarising the function'remDr$client' into 'driver'
 driver <- remDr$client
 
+Sys.sleep(3)
+
 #Note following only when having newly initiated the port
 #Accepting cookies
 driver$findElement(value = "(//button[@class = 'ui-button ui-button--small ui-button--tertiary ui-button--positive'])[1]")$clickElement()
@@ -467,7 +469,7 @@ mercadona$gender_2 <- case_when(
   mercadona$gender == "Female" ~ "Non-Male",
   mercadona$gender == "Non-Male"~ "Non-Male")
 
-
+remDr$server$stop()
 ```
 
 ## Clarel
@@ -493,7 +495,7 @@ clarel_url <- "https://www.clarel.es/es/"
 
 remDr$navigate(clarel_url)
 
-Sys.sleep(5)
+Sys.sleep(20)
 
 #Reject cookies
 remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
@@ -561,7 +563,7 @@ Using this function, we can obtain all the necessary URLs to scrape all the prod
 ```{r}
 #Load more items helper function
 load_all_items <- function() {
-  Sys.sleep(3.5)
+  Sys.sleep(2)
   tryCatch(
     {
       suppressMessages({
@@ -569,7 +571,7 @@ load_all_items <- function() {
                                           "//button[contains(@class, 'load-more-items-button')]")
       while(load_more_button$isElementDisplayed()[[1]]) {
       load_more_button$clickElement()
-      Sys.sleep(3.5)
+      Sys.sleep(2)
       load_more_button <-remDr$findElement(using = "xpath", 
                                            "//button[contains(@class, 'load-more-items-button')]")
       }
@@ -808,7 +810,7 @@ big_df <- bind_rows(mercadona_cleaned, cleaned_clarel) %>%
 
 ```{r}
 big_df <- big_df |> 
-  mutate(type_brand = ifelse(brand == "Deliplus"|brand == "NESK"|brand == "BONTE" ~"Housebrand", "Brand"))
+  mutate(type_brand = ifelse((brand == "Deliplus"|brand == "NESK"|brand == "BONTE") ,"Housebrand", "Brand"))
 ```
 
 ### Saving the data
