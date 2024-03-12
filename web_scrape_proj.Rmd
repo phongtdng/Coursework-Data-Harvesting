@@ -400,8 +400,8 @@ brands <- c("Deliplus", "Elvive", "Pantene", "O'lysee",
 
 brands_or <- paste(brands, collapse = "|")
 
-final$brand <- str_extract_all(final$name, regex(brands_or, ignore_case = TRUE))
-
+final <- final %>% 
+  mutate(brand = str_extract(name, regex(brands_or, ignore_case = TRUE)))
 ```
 
 ### Standardising prices
@@ -742,7 +742,7 @@ cleaned_clarel <- all_products_clarel %>%
   #Remove products for kids
   filter(gender != "Kid") %>% 
   #Reorganise column names to join with other datasets
-  dplyr::select(product_name, qty, qty_unit, price, sub_category, category, avg_price, gender, gender_2)
+  dplyr::select(product_name, qty, qty_unit, price, sub_category, category, brand, avg_price, gender, gender_2)
 ```
 
 As for most web scraping projects, the scraped data is usually messy and needs diligent cleaning so it is appropriate for analysis. The same goes for the data scraped here previously.
@@ -760,7 +760,7 @@ Finally, we detect the gender for which the product aims. First, all products in
 ```{r}
 #Modify mercadona dataframe to join
 mercadona_cleaned <- mercadona |> 
-  select(-brand, -gender_name) |> 
+  select(-gender_name) |> 
   mutate(store = "Mercadona")
 
 cleaned_clarel <- cleaned_clarel |> 
