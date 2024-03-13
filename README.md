@@ -1,12 +1,12 @@
 ## Read Me
 
-### 1.  Title: Scraping data on personal health products from Mercadona and Clarel to determine price differences between male and non-male marketed products
+### Scraping data on personal health products from Mercadona and Clarel to determine price differences between male and non-male marketed products
 
-### 2.  Project description
+### 1.  Project description
 
 This assignment aims to investigate price differences in personal care products in Spain. More specifically, are male personal care products priced differently compared to non-male products? To obtain the data needed for this analysis, data on personal health care products is scraped from the website of Mercadona and Clarel, a large Spanish supermarket and drugstore chain respectively. Then, mean comparisons are performed to determine any price differences between male and non-male products for different types of personal health products.
 
-### 3.  Table of contents
+### 2.  Table of contents
 
     1.  Introduction
     2.  Libraries
@@ -28,11 +28,11 @@ This assignment aims to investigate price differences in personal care products 
     7.  Mean comparisons
     8.  Discussion and conclusion
 
-### 4.  Technologies used
+### 3.  Technologies used
 
  The coding language used to create this project is R.
 
-### 5.  Requirements
+### 4.  Requirements
 
  To run the code in this project one needs to have installed the follwoing packages in R:
 
