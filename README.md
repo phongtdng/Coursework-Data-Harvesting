@@ -42,7 +42,7 @@ This assignment aims to investigate price differences in personal care products 
 -   [httr:](https://cran.r-project.org/web/packages/httr/index.html) Package including tools for working with URLs and HTTP
 -   [ROSE:](https://cran.r-project.org/web/packages/ROSE/index.html) *Random Over-Sampling Examples.* This package contains tools to apply a combination of under- and over-sampling techniques to balance unbalanced data sets
 -   [Broom:](https://cran.r-project.org/web/packages/broom/index.html) Package to convert statistical sbjects into tidy tibbles
--   [Glue:] (https://cran.r-project.org/web/packages/glue/index.html). Package providing tools for easy and efficient string interpolation
+-   [Glue:](https://cran.r-project.org/web/packages/glue/index.html). Package providing tools for easy and efficient string interpolation
 
 All packages used in this assignment can be downloaded into R using the function install.packages(). For example:
 
