@@ -7,13 +7,13 @@ source("helpers.R")
 
 #Code for making app
 ui <- fluidPage(
-  titlePanel("Pink Tax - Spain"),
-  
+  titlePanel("Gender Labelled Product Pricing - Spain"),
+  br(),
   fluidRow(
-    column(width = 4,
+    column(width = 3,
            multiInput(
              inputId = "product",
-             label = "Choose your products :", 
+             label = "Choose products that you frequently purchase:", 
              choices = NULL,
              choiceNames = unique(df$product),
              choiceValues = unique(df$product)
@@ -30,9 +30,16 @@ ui <- fluidPage(
              status = "primary"
            )
     ),
-    column(width = 4, 
-           mainPanel(width = 12,
-                     plotOutput("plot", width = "300")
+    column(width = 5, 
+           mainPanel(width = 12, plotOutput("plot", width = "500"),
+            HTML(
+            '<p style = "color:gray; font-size:11px">The entire donut represents the average 
+            total price of selected products that are not targeted specifically at men 
+            (including female-targeted products and non-gender-labelled products). The "Price Male" 
+            group represents products specifically targeted at male consumers, such as those labelled 
+            "for men". The "Overcharge" group shows the price difference between products targeted 
+            at men and those not specifically targeted at men.
+            </p>')
            )),
     column(width = 4, 
            h3(strong("Most overcharged item")),
@@ -117,7 +124,7 @@ server <- function(input, output) {
     HTML(glue(
       "
       <p>
-      Recommend switching products: <br>
+      Recommend switching to male-targeted products to avoid overcharge: <br>
       {ifelse(length(rec) == 0, '', paste('<li>',rec, collapse = '<br>', '</li>'))}
       </p>
       "
