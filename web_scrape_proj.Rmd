@@ -4,7 +4,7 @@ author: "Phong Duong, Rianne Nienke Visscher"
 date: "2024-02-15"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Library
@@ -28,7 +28,7 @@ This assignment aims to investigate price differences in personal care products 
 
 This assignment is structured as follow: first the data on the personal health product from the Mercadona and the Clarel website are scraped and cleaned and added to a data frame. Then, the data is balanced after which t-test will be utilised to examine the price differences.
 
-In addition to the analysis of the price differences, we also created a dashboard with Shiny to help consumers be more aware of the products that might be overcharged due to gender-specific marketing. The dashboard also computes annual overcharged amount of the selected products and make recommendation on which products to switch in order to avoid the overcharge.
+In addition to the analysis of the price differences, we also created a dashboard with Shiny to help consumers be more aware of the products that might be overcharged due to gender-specific marketing. The dashboard also computes annual overcharged amount of the selected products and make recommendation on which products to switch in order to avoid the overcharge. To run the Shiny App, simply open "app.R" and click on "Run App" button on the panel at the top or press "Ctrl + Shift + Enter" for Windows or "Command + Shift + Enter" for Mac.
 
 ## Mercadona
 
@@ -395,6 +395,14 @@ For Clarel website, there is a lot of content hidden through Javascript so we wi
 ### Data Collection
 
 ```{r}
+#remove driver from last session
+rm(driver)
+rm(remDr)
+```
+
+For this section we will initialize the RSelenium driver again, we will remove the previous "driver" and "remDr" objects since it sometimes causes some errors when running another session of Selenium driver.
+
+```{r}
 driver <- rsDriver(browser = "firefox",
                    chromever = NULL,
                    verbose = F)
@@ -411,13 +419,18 @@ clarel_url <- "https://www.clarel.es/es/"
 
 remDr$navigate(clarel_url)
 
-Sys.sleep(20)
+Sys.sleep(2)
+
+#click on a random element to activate the page
+remDr$findElement(using = "xpath", "//div[@class ='header-top-navigation']")$clickElement()
+
+Sys.sleep(2)
 
 #Reject cookies
 remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
 ```
 
-Once we navigate to the home page of Clarel, there is a pop up for cookies so we will need to either accept or reject the cookies. We leave the system to pause for 20 seconds after navigating to the home page so the browser has sufficient time to load everything. If reject cookies line code runs into error, most likely it is because the page has not fully loaded and the pop up has not appeared yet therefore the button is not found. It is necessary to run again the reject cookies code. If it still runs into error, it is likely that the elements in the web page have changed their name.
+Once we navigate to the home page of Clarel, there is a pop up for cookies so we will need to either accept or reject the cookies. We leave the system to pause for 2 seconds after navigating to the home page so the browser has sufficient time to load everything. Next, it seems that the page only start to load after there is some mouse movement on the page. Therefore, we send a click to a random element on the page to activate the rest of the page. After this, the cookies pop up should appear and then we send a click to the rejection button. If reject cookies line code runs into error, most likely it is because the page has not fully loaded and the pop up has not appeared yet therefore the button is not found. It is necessary to run again the reject cookies code. If it still runs into error, it is likely that the elements in the web page have changed their name.
 
 #### Scrape Hombre Category
 
@@ -580,7 +593,7 @@ all_products_clarel <- map_dfr(imp_cat ,scrape_all)
 write_csv(all_products_clarel, "datasets/clarel.csv")
 
 #close server
-driver$server$close()
+driver$server$stop()
 ```
 
 With the helper functions created before, we have all the tools needed to scrape products from Clarel web page on a large scale (multiple categories). We create a vector with all the interested categories and a function to automate the scraping. This function navigates to the home page of Clarel, then extracts all URLs of sub-categories and product types of the main category input, and finally gets all the product information using the function from the last section to produce a final data frame. We use `map_dfr` to apply the function on the vector of interested categories and create a comprehensive data frame.
