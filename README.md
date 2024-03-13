@@ -78,4 +78,6 @@ remDr <- rsDriver(port = 4467L, browser = "firefox",  verbose=F, chromever = NUL
 
 In this project, a Shiny dashboard application was created so that users can interact with some of the data collected from the project. The "app.R" script contains all the code to create the dashboard and the "helpers.R" file contains the code to load the data set and helper functions to create visualisation. The dashboard is reactive to the input so as new inputs are selected, the visualisation and computation will change accordingly.
 
+To run the app, simply open "app.R" file and click on "Run App" or "Ctr + Shift + Enter" for Windows or "Command + Shift + Enter" for Mac.
+
 The data set used for the application has a certain format, therefore, reproducibility might be affected if websites used in this project change their elements names or structure and consequently produce an erred data set for the application. However, the data set saved at the time of the production of this project should work and can be downloaded to use for the app in case websites are changed in the future.
