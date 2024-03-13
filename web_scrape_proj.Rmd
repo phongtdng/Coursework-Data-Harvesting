@@ -20,20 +20,21 @@ library(glue)
 library(dplyr)
 ```
 
-
 ## Introduction
 
-When one strolls trough the isles with personal care products in a drug store or the supermarket, one will notice that products are clearly targeted at men or women. One will also notice that tehd majority of the isle is coloured pink, as the majority of personal care products are specifically marketed towards women. However, something one might not directly remarks is that these pink products are higher priced compared to the blue male targeted products. This overpricing of female products is known as the 'Pink tax' and is prevelent among all sorts of products ranging from clothing to toys (Economic Committee United States Congress, 2016). Guittar et al. (2022) researched this *pink tax* of personal health products in the US and find that women tend to pay more for products such as deoderants and lotions, whereas men tend to pay more for shaving gels. This assignment aims to investigate price differences in personal care products in Spain. More specifically, are male personal care products priced differently compared to non-male products? To obtain the data needed for this analysis, data on personal health care products is scraped from the website of Mercadona and Clarel, a large Spanish supermarket and drugstore chain respectively. Then, mean comparisons are performed to determine any price differences between male and non-male products for different types of personal health products. Unfortunately, the structure of the obained data does not allow to investigate price differences between male and female marketed products as the identification of the gender marketed of these products is done using the product or category name which contain information on the gender when it involves a male marketed product but not when it involves a female marketed products. Future research can utilise image detection methods to indicate the gender of the products which is out of the scope of this assignment.
+When strolling trough the isles of personal care products in a drug store or the supermarket, one would notice that products are clearly targeted at men or women. One would also notice that the majority of the isle is coloured pink, as the majority of personal care products are specifically marketed towards women. However, these pink products are also usally priced higher compared to the blue coloured, male-targeted products. This overpricing of female products is known as the 'Pink tax' and is prevalent among all sorts of products ranging from clothing to toys (Economic Committee United States Congress, 2016). Guittar et al. (2022) researched this *pink tax* of personal health products in the US and find that women tend to pay more for products such as deodorants and lotions, whereas men tend to pay more for shaving gels.
 
-This assignment is structured as follows: first the data on the personal health product from the Mercadona and the Clarel website are scraped and cleaned and added to a data frame. Then, the data is balanced after which t-test will be utilised to examine the price differences.
+This assignment aims to investigate price differences in personal care products in Spain. More specifically, it aims to answer the question of whether male personal care products are priced differently compared to non-male products. To obtain the data needed for this analysis, data on personal health care products is extracted from the websites of Mercadona and Clarel, a large Spanish supermarket and drugstore chain respectively. Then, mean comparisons are performed to determine any price differences between male and non-male products for different types of personal health products. Unfortunately, the structure of the obtained data does not allow to investigate price differences between male and female marketed products as the identification of the gender marketed of these products is done using the product or category name which contain information on the gender when it involves a male marketed product but not when it involves a female marketed products. Future research can utilise image detection methods to indicate the gender of the products but this is out of the scope of this assignment.
 
-In addition to the analysis of the price differences, a dashboard is created to help consumers be more aware of the products that are overcharging.
+This assignment is structured as follow: first the data on the personal health product from the Mercadona and the Clarel website are scraped and cleaned and added to a data frame. Then, the data is balanced after which t-test will be utilised to examine the price differences.
+
+In addition to the analysis of the price differences, we also created a dashboard with Shiny to help consumers be more aware of the products that might be overcharged due to gender-specific marketing. The dashboard also computes annual overcharged amount of the selected products and make recommendation on which products to switch in order to avoid the overcharge.
 
 ## Mercadona
 
 ### Setting up RSelenium
 
-First, the user agent is being set to provide the website that is being scraped with the information of the scraper. This is done to allow the webmaster to contact the scraper in case she is causing any problems for the functioning of the website. Then the background browser is being opened using the command 'rsDriver()'. The url of the supermarket Mercadona is loaded into a variable called 'merc' which is then inserted into the 'remDr$client$navigate()' function, to browse the Mercadona website in the background browser.
+First, the user agent is being set to provide the website that is being scraped with the information of the scraper. This is done to allow the webmaster to contact the scraper in case she is causing any problems for the functioning of the website. Then the background browser is being opened using the command `rsDriver()`. The URL of the supermarket Mercadona is loaded into a variable called `merc` which is then inserted into the `remDr$client$navigate()` function, to browse the Mercadona website in the background browser.
 
 ```{r}
 
@@ -58,7 +59,7 @@ remDr$client$navigate(merc)
 
 #### Clicking through opening page
 
-First, the function 'remDr\$client' is summarised into 'driver'. The following chunk should only be executed when the port is newly initiated. Before one is allowed to browse the Mercadona website, the cookies need to be accepted and a postal code needs to be inserted. After each clickElement(), a system sleep of 1 second is included to avoid errors coming from the code running faster than selenium is able to browse.
+First, the function `remDr$client` is summarised into `driver`. The following chunk should only be executed when the port is newly initiated. Before one is allowed to browse the Mercadona website, the cookies need to be accepted (or rejected) and an input of postal code is required. After each `clickElement()`, a system sleep of 1 second is programmed to avoid errors coming from the code running faster than selenium server is able to browse.
 
 ```{r}
 
@@ -89,7 +90,7 @@ Sys.sleep(1)
 
 #### Obtain the URLs per category
 
-The two categories that will we scraped from the Mercadona website for this assignment are 'Cuidado del cabello' and 'Cuidado facial y corporal'. Due to the structuring on the website, HTML code for each subcategory within the two main categories only becomes visible when changing to the url of this specific subcategory. Therefore, the urls for each subcategory need to be extracted to be able to read the html code. To do so, one loop per main category is created. First, one needs to create an empty list to store the urls. Then, using the function 'driver\$findElement()' one navigates to the button of the first category 'Cuidado del cabello' and clicks on this button using the function 'clickElement()'. Now, the category 'Cuidado del cabello' as well as the first subcategory are entered and the url is extracted using the function 'driver\$getCurrentUrl()' and is stored in the url list. The category 'Cuidado del cabello' has three more subcategories left that need to be scraped. When one scrolls down to the end of the page of the subcategory, one finds a button which directs the user to the next sub category. Using a 'for loop', this button is clicked and the url of this next subcategory is saved in the url list. When the list includes 4 urls, the loop terminates. This method is repeated for the second category. Two seperate loops have to be initiated as the html code of the subcategories does not allow clicking on the side navigation bar to navigate to the next category. When all urls are collected in the url list, the function unlist() is utilised to convert to an unnested list.
+The two categories that we scraped from the Mercadona website for this assignment are 'Cuidado del cabello' and 'Cuidado facial y corporal'. Due to the structuring on the website, HTML code for each subcategory within the two main categories only becomes visible when changing to the URL of this specific subcategory. Therefore, the URLs for each subcategory need to be extracted to be able to read the html code. To do so, a loop per main category is created. First, one needs to create an empty list to store the URLs. Then, using the function `driver$findElement()` one navigates to the button of the first category 'Cuidado del cabello' and clicks on this button using the function `clickElement()`. Now, the category 'Cuidado del cabello' as well as the first subcategory are entered and the URL is extracted using the function `driver$getCurrentUrl()` and stored in the URL list. The category 'Cuidado del cabello' has three more subcategories left that need to be scraped. When one scrolls down to the end of the page of the subcategory, one will find a button which directs the user to the next sub category. Using a 'for loop', this button is clicked and the URL of this next subcategory is saved in the URL list. When the list includes 4 URLs, the loop terminates. This method is repeated for the second category. Two seperate loops have to be initiated as the html code of the subcategories does not allow clicking on the side navigation bar to navigate to the next category. When all URLs are collected in the URL list, the function `unlist()` is utilised to convert to an unnested list.
 
 ```{r}
 
@@ -151,7 +152,7 @@ url <-unlist(url)
 
 ### Scraping and cleaning data
 
-In the following chunk, the html code for each subcategory is collected, the needed data is extracted, cleaned and consequently added to a data frame. First, the function navigates to one of the urls in the url list. A system sleep is ultilised to avoid the code running faster than the browsing which will cause errors. Then, the html code is collected using the function 'driver\$getPageSource()' and is read using the function read_html(). At this point, the html code is stored in the 'cat_html' variable and can be navigated using functions from the 'xml2' package. Hereafter, the data of the products is stored in the variable 'cat_info' by first finding the correct tag which stores the data with the function 'xml_find_all()', and consequently converting the tag to text using the function xml_text(). This method is repeated to collect the names of the subcategories. The xml text strings containing the data of the products is cleaned and separated into smaller strings. First the strings are separated by inserting a / in the places where the string needs to be split using the 'str_replace_all()' function and consequently splitting the string according to the / sign. The strings are splitted into a name, quantity, quantity unit and price. Then, these substrings are added to a data frame together with the subcategory strings. Finally, the function 'map_dfr()' is used to loop all urls in the url list over the function 'cat_grabber' resulting in a data frame containing data on all the products of the categories 'Cuidado del cabello' and 'Cuidado facial y corporal' of the supermarket chain Mercadona.
+In the following chunk, the html code for each subcategory is collected, the needed data is extracted, cleaned and consequently added to a data frame. First, the function navigates to one of the URLs in the URL list. A system sleep is ultilised to avoid the code running faster than the browsing which would cause errors. Then, the html code is collected using the function `driver$getPageSource()` and read using the function `read_html()`. At this point, the html code is stored in the `cat_html` variable and can be navigated using functions from the `xml2` package. Hereafter, the data of the products is stored in the variable `cat_info` by first finding the correct tag which stores the data with the function `xml_find_all()`, and consequently converting the tag to text using the function `xml_text()`. This method is repeated to collect the names of the subcategories. The XML text strings containing the data of the products is cleaned and separated into smaller strings. First the strings are separated by inserting `a /` in the places where the string needs to be split using the `str_replace_all()` function and consequently splitting the string according to the "/" sign. The strings are split into name, quantity, quantity unit and price. Then, these sub-strings are added to a data frame together with the subcategory strings. Finally, the function `map_dfr()` is used to loop all URLs in the URL list over the function `cat_grabber` resulting in a data frame containing data on all the products of the categories 'Cuidado del cabello' and 'Cuidado facial y corporal' of the supermarket chain Mercadona.
 
 ```{r}
 
@@ -246,7 +247,7 @@ final <- map_dfr(url, cat_grabber)
 
 #### Scrape and add main categories to data frame
 
-To scrape and add the main categories to the data frame, the function 'driver\$navigate()' is used to navigate to first url in the list which is the home page including all main categories. Then, the html code is collected and read using the functions 'driver\$getPageSource()' and 'read_html()'. The function 'xml_find_all()' is used to find the correct tag followed by the use of the xml_text() function in order to convert the tag into text which is stored in the variable 'cat'. The category 'Cuidado del cabello' and 'Cuidado facial y corporal' are stored in the 14th and 15th position of the list respectively. Consequently, the categories are added to the data frame by matching to their subcategories.
+To scrape and add the main categories to the data frame, the function `driver$navigate()` is used to navigate to first URL in the list which is the home page including all main categories. Then, the html code is collected and read using the functions `driver$getPageSource()` and `read_html()`. The function `xml_find_all()` is used to find the correct tag followed by the use of the `xml_text()` function in order to convert the tag into text which is stored in the variable `cat`. The category 'Cuidado del cabello' and 'Cuidado facial y corporal' are stored in the 14th and 15th position of the list respectively. Consequently, the categories are added to the data frame by matching to their subcategories.
 
 ```{r}
 
@@ -281,7 +282,7 @@ final <- final |>
 
 ### Extracting brand names
 
-In the chunk below, the brand names are extracted. The brand names are included into the name of the product without a clear or reoccurring structure. Therefore, no regex could be applied to extract these brand names. For this reason, the different brand names in the data are identified by hand and collected into a vector. Then, this vector is collapsed into a string called 'brands_or', separating the brand names by an \| sign. This string is used to extract the brand names from the product names using the function 'str_extract_all()' and these extractions are added to a new column called 'brand'.
+In the chunk below, the brand names are extracted. The brand names are included into the name of the product without a clear or reoccurring structure. Therefore, no regex could be applied to extract these brand names. For this reason, the different brand names in the data are identified by hand and collected into a vector. Then, this vector is collapsed into a string called `brands_or`, separating the brand names by an "\|" sign. This string is used to extract the brand names from the product names using the function `str_extract_all()` and these extractions are added to a new column called "brand".
 
 ```{r}
 
@@ -321,9 +322,9 @@ final <- final %>%
   mutate(brand = str_extract(name, regex(brands_or, ignore_case = TRUE)))
 ```
 
-### Standardising prices
+### Standardizing prices
 
-As the prices of the products are for different quantities which are measured in different units, the prices of the products need to be standardised for them to be comparable. Hence, the price of liquid products are converted to the price of this product per 100 ml, the prices of products measured in grams are converted to the price per 100 grams, and the price of products measured in units are converted to the price of 1 unit. The latter is done using the function 'case_when()' and applying the correct converting formula to the price, based on the detected measurement unit using the function 'str_detect()'.
+As the prices of the products are in different quantities which are measured in different units, the prices of the products need to be standardized for them to be comparable. Hence, the price of liquid products are converted to the price of this product per 100 ml, the prices of products measured in grams are converted to the price per 100 grams, and the price of products measured in units are converted to the price of 1 unit. The latter is done using the function `case_when()` and applying the correct converting formula to the price, based on the detected measurement unit using the function `str_detect()`.
 
 ```{r}
 units <- c("L", "ml", "ud", "sobres", "bandas", "g")
@@ -345,7 +346,7 @@ mercadona <- final |>
 
 ### Assigning marketed gender to product
 
-In the following chunk, the targeted gender of the product is extracted and added to a new column in the data frame. First, different words that indicate gender are added to a vector called 'gender' which is then collapsed into a string separating the words by an \| sign. As both the name of the product as well as the subcategory name can contain information on the gender, these two columns are temporarily combined into the variable 'combine'. Then, the function 'str_extract()' is used to extract the gender names from the 'combined' variable and the names are stored in the variable 'gender_name'. When no gender is detected, the products is assigned NA which are then renamed as 'non-male'. Hereafter, two separate vectors inlcuding male and female words are created. These vectors are used to assign 'Male', 'Female' or 'Non-male' to the products through applying the function case_when() and is stored in the variable 'gender'. Then, this process is repeated again but this time only assigning 'male' or 'non-male' to products.
+In the following chunk, the targeted gender of the product is extracted and added to a new column in the data frame. First, different words that indicate gender are added to a vector called `gender` which is then collapsed into a string separating the words by an "\|" sign. As both the name of the product as well as the subcategory name can contain information on the gender, these two columns are temporarily combined into the variable `combine`. Then, the function `str_extract()` is used to extract the gender names from the `combined` variable and the names are stored in the variable `gender_name`. When no gender is detected, the products is assigned "NA" which are then renamed as "non-male". Hereafter, two separate vectors including male and female words are created. These vectors are used to assign "Male", "Female" or "Non-male" to the products through applying the function `case_when()` and is stored in the variable `gender`. Then, this process is repeated again but this time only assigning "male" or "non-male" to products.
 
 ```{r}
 #Vector of words indicating gender
@@ -401,7 +402,7 @@ driver <- rsDriver(browser = "firefox",
 remDr <- driver[["client"]]
 ```
 
-We first initialize the Selenium server and create a remote driver session. We're saving the client object to a variable for quicker access later on.
+We first initialize the Selenium server again and create a remote driver session. We're saving the client object to a variable for quicker access later on.
 
 #### Main Webpage
 
@@ -416,7 +417,7 @@ Sys.sleep(20)
 remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
 ```
 
-Once we navigate to the home page of Clarel, there is a pop up for cookies so we will need to either accept or reject the cookies. We leave the system to pause for 5 seconds after navigating to the home page so the browser has sufficient time to load everything. If reject cookies line code runs into error, most likely it is because the page has not fully loaded and the pop up has not appeared yet therefore the button is not found. It is necessary to run again the reject cookies code. If it still runs into error, it is likely that the elements in the web page have changed their name.
+Once we navigate to the home page of Clarel, there is a pop up for cookies so we will need to either accept or reject the cookies. We leave the system to pause for 20 seconds after navigating to the home page so the browser has sufficient time to load everything. If reject cookies line code runs into error, most likely it is because the page has not fully loaded and the pop up has not appeared yet therefore the button is not found. It is necessary to run again the reject cookies code. If it still runs into error, it is likely that the elements in the web page have changed their name.
 
 #### Scrape Hombre Category
 
@@ -459,7 +460,7 @@ sub_cat_2_url
 
 In each main category of products on Clarel, there are also sub-categories and in each of the sub-category sometimes there are sub-section (they will be referred as product type in this document) with the details the product type as well. We would like to get all of this information so later we have more resources to work with for the analysis in case that we need it.
 
-To do this, first a helper function is created to grab all the URLs to the sub-categories and product types. Another option would have been to navigate to each sub-category and grab the product types but it is more time consuming as we would need to go to multiple product type pages of multiple sub-category pages and the loading time would amass quickly. Therefore, we tried to identify all the URLs from the home page but the positive trade-off is some cleaning in the process.
+To do this, first a helper function is created to grab all the URLs to the sub-categories and product types. Another option would have been to navigate to each sub-category and grab the product types but it is more time consuming as we would need to go to multiple product type pages of multiple sub-category pages and the loading time would amass quickly. Therefore, we tried to identify all the URLs from the home page but the trade-off is some cleaning in the process.
 
 The logic of this function is of below:
 
@@ -499,7 +500,7 @@ load_all_items <- function() {
 # load_all_items()
 ```
 
-Navigating to the URL of the sub-categories and product types gives us a list of products. However, pages have a lot of products and not all are shown on the page. These products are hidden after the "Ver más productos" ("See more products") and we need to repeatedly click on the button until all the products are shown.
+Navigating to the URL of the sub-categories and product types gives us a list of products. However, the pages have a lot of products and not all are shown on the page. These products are hidden after the "Ver más productos" ("See more products") and we need to repeatedly click on the button until all the products are shown.
 
 Above, we created a function to click the button until the button is gone, meaning that all products have been loaded. There are pauses between each click to wait for the products to load. Since we do not know how many times we have to click the button, we use a `while` loop to click the button until there is no more button to click. When there is no more button, we would get an error if we tried to find the button so we use a `tryCatch()` function to catch and ignore this error.
 
@@ -731,20 +732,24 @@ big_df <- big_df |>
   mutate(type_brand = ifelse((brand == "Deliplus"|brand == "NESK"|brand == "BONTE") ,"Housebrand", "Brand"))
 ```
 
+To join the 2 data frames of Mercadona products and Clarel's, their columns need to have the same names and positions to bind with `bind_rows` function. Since the categories and sub-categories of the 2 websites are named differently. We would need to match them so later analysis can be done properly. A function to match strings into categories is created to facilitate this process. The matched category column is created by applying this function to the sub-category column and then again on the product name column in order to identify over as many items as possible. For the categories that could not find a match, we put them into "Other".
+
+Next, we also identified home brands of both Mercadona and Clarel so we can later elaborate the analysis on home brands versus non home brands.
+
 ### Saving the data
 
-Given that the html code of the websites might change which will cause the scraping code to stop functioning, the full data frame is stored in a csv file names 'full_data.csv'. Then, the csv file is loaded back into R to continue with the analysis.
+The html code of the websites might change which will cause the scraping code to stop functioning, the full data frame is stored in a csv file names "full_data.csv". Then, the csv file is loaded back into R to continue with the analysis.
 
 ```{r}
-write_csv(big_df, "full_data.csv")
+write_csv(big_df, "datasets/full_data.csv")
 
-full_data <- read_csv("full_data.csv")
+full_data <- read_csv("datasets/full_data.csv")
 
 ```
 
 ## Data balancing
 
-Given that the data set is rather unbalanced with regards to the number of 'male' and 'non-male' products, the data set is balanced based on the 'gender_2' variable. The balancing method applied both undersamples the majority class and oversamples the minority class to generate a data set in which approximately half of the cases are from the original majority class and half of the cases of the original minority class. This balancing is necessary for the application of t-test to compare the price means of the 'male' and 'non-male' category.
+Given that the data set is rather unbalanced with regards to the number of "male" and "non-male" products, the data set is balanced based on the `gender_2` variable. The balancing method applied both undersamples the majority class and oversamples the minority class to generate a data set in which approximately half of the cases are from the original majority class and half of the cases of the original minority class. This balancing is necessary for the application of t-test to compare the price means of the "male" and "non-male" category.
 
 ```{r}
 # Plot the distribution of 'gender_2' 
@@ -777,7 +782,7 @@ df_balanced |>
 
 ## Removing outliers
 
-The chunk below removes the outliers in the data set grouped by the subcategory and the gender (male, non-male). The first and third quartiles of the avg_price variable within each group defined by the previous group_by operation are computed. Then, the interquartile range (IQR) of the avg_price variable within each group is computed. The lower and upper bounds for outliers are computed based on the IQR method. Outliers are defined as values that fall below Lower or above Upper. Only the rows where the avg_price falls within the calculated bounds is maintained in the data set by applying the function 'subset()'. Finally, the data set in ungrouped.
+The code below removes the outliers in the data set grouped by the subcategory and the gender (male, non-male). The first and third quartiles of the `avg_price` variable within each group defined by the previous `group_by` operation are computed. Then, the interquartile range (IQR) of the `avg_price` variable within each group is computed. The lower and upper bounds for outliers are computed based on the IQR method. Outliers are defined as values that fall below Lower or above Upper. Only the rows where the avg_price falls within the calculated bounds is maintained in the data set by applying the function `subset()`. Finally, the data set is ungrouped.
 
 ```{r}
 # Group the data frame by 'match_subcat' and 'gender_2'
@@ -807,9 +812,9 @@ In this section, the prices between male and non-male products are compared with
 
 ### Categories
 
-To start, a function is created within which first a data set is created named 'cat_d' which is the 'df_balanced' but filtered by a specific combination of the category name and the quantity unit. Then, the standardised price ('avg_price') is filtered by 'male' and 'non-male' and stored in the variables 'prices_male' and 'prices_non-male' respectively. Hereafter, an empty variable named 't_test_result' is created to later store the results from the t-test analyses and the t-test function is inserted within a 'tryCatch()' function as not all t-tests will be valid and generate results. When the t-test failed, the results are assigned NA and the function continues. The t-test function tests whether the prices of the male products are significantly lower then the prices of non-male products. The function 'tidy()' is used to convert the output of the t-test into a tibble.
+To start, a function is created within which first a data set is created named `cat_d` which is the `df_balanced` but filtered by a specific combination of the category name and the quantity unit. Then, the standardized price ("avg_price") is filtered by "male" and "non-male" and stored in the variables `prices_male` and `prices_non-male` respectively. Hereafter, an empty variable named `t_test_result` is created to later store the results from the t-test analyses and the t-test function is inserted within a `tryCatch()` function as not all t-tests will be valid and generate results. When the t-test failed, the results are assigned NA and the function continues. The t-test function tests whether the prices of the male products are significantly lower then the prices of non-male products. The function `tidy()` is used to convert the output of the t-test into a tibble.
 
-Once the function is correctly specified, a loop function is created to apply the function to all combinations of category and quantity unit. The unique category names are saved into a data frame named 'cat_loop' using the function 'dinstinct()'. Then, the column 'cat_name' from the 'cat_loop' data frame is converted into a nested list by applying the 'as.list()' function and is then unnested through the function 'unlist()'. As each category will be tested per quantity unit, a new list names 'cat_f' is created in which the category names are duplicated using the 'rep()' function. A vector called 'quan_f' is created in which the two main quantity units 'ml' and 'ud' are alternating repeated both 6 times. An empty list named 'x' is created to store the results of the t-test. Hereafter, a loop is created which applies the 't-test-fun' to the items in the 'cat_f' and 'quan_f' vectors. All tibbles containing the results of the different t-test are combined into one data frame named 'result_cat' using the function 'do.call()' in combination with 'rbind()'. The corresponding categories and units are added to the 'result_cat' data frame to enhance interpretability. Then, this data frame is cleaned by properly renaming the columns and organising the columns in a more logical order.
+Once the function is correctly specified, a loop function is created to apply the function to all combinations of category and quantity unit. The unique category names are saved into a data frame named "cat_loop" using the function `dinstinct()`. Then, the column "cat_name" from the "cat_loop" data frame is converted into a nested list by applying the `as.list()` function and is then unnested through the function `unlist()`. As each category will be tested per quantity unit, a new list names "cat_f" is created in which the category names are duplicated using the `rep()` function. A vector called "quan_f" is created in which the two main quantity units "ml" and "ud" are alternating repeated both 6 times. An empty list named "x" is created to store the results of the t-test. Hereafter, a loop is created which applies the `t-test-fun` to the items in the "cat_f" and "quan_f" vectors. All tibbles containing the results of the different t-test are combined into one data frame named "result_cat" using the function `do.call()` in combination with `rbind()`. The corresponding categories and units are added to the "result_cat" data frame to enhance interpretability. Then, this data frame is cleaned by properly renaming the columns and organising the columns in a more logical order.
 
 ```{r}
 
@@ -1120,17 +1125,17 @@ resul_sig_sub_brands <- result_sub_brands |>
 
 ## Discussion
 
-When comparing the mean prices of the male and non-male marketed products, for most of the main categories, the male products seem to be higher prices. However, for hygiene products, the non-male products are cheaper. When inspecting the price differences by sub category, most male marketed products are again more expensive. Some of the subcategories have rather large differences such as a differences of 5€ for skin care products (cuidado facial). Moreover, there are large differences in prices when performing the analysis only on house brand products for the categories 'Coloración (ud)', 'Cuidado facial (ud)' having a significantly higher price for male products compared to non-male products and 'Depilación (ml)' having a significantly lower price for male marketed products. However, one should not that significant results are only found for 3 of the 16 subcategories. When performing the analysis only on branded products, the product sub-catgegories with significant price differences show higher prices for the male targeted products compared to the non-male targeted products. Only products in the sub categories 'Desodorante (ml)' and 'Fijación cabello (ml)' are more expensive in case of non-male targeted products. Note that again in 6 of the 16 subcategories for only one of the two measurement units a significant price difference has been found. Unfortunately, the t-test were not computed for all combinations of subcategories and measurement units due to small numbers of cases in some of these combinations.
+When comparing the mean prices of the male and non-male marketed products, for most of the main categories, the male products seem to be higher prices. However, for hygiene products, the non-male products are cheaper. When inspecting the price differences by sub category, most male marketed products are again more expensive. Some of the subcategories have rather large differences such as a differences of 5€ for skin care products (cuidado facial). Moreover, there are large differences in prices when performing the analysis only on house brand products for the categories "Coloración (ud)", "Cuidado facial (ud)" having a significantly higher price for male products compared to non-male products and "Depilación (ml)" having a significantly lower price for male marketed products. However, one should not that significant results are only found for 3 of the 16 subcategories. When performing the analysis only on branded products, the product sub-categories with significant price differences show higher prices for the male targeted products compared to the non-male targeted products. Only products in the sub categories "Desodorante (ml)" and 'Fijación cabello (ml)' are more expensive in case of non-male targeted products. Note that again in 6 of the 16 subcategories for only one of the two measurement units a significant price difference has been found. Unfortunately, the t-test were not computed for all combinations of subcategories and measurement units due to small numbers of cases in some of these combinations.
 
 ## Conclusion
 
-The analysis is price differences mainly showed significantly higher prices for male marketed products compared to non-male marketed products. Also, these differences are different for branded and housebranded products. Interestingly, when non-male marketed products showed higher prices, these are products mainly used only by women such as hairspray or hair removal products.
+The analysis is price differences mainly showed significantly higher prices for male marketed products compared to non-male marketed products. Also, these differences are different for branded and house-branded products. Interestingly, when non-male marketed products showed higher prices, these are products mainly used only by women such as hairspray or hair removal products.
 
 ### Limitations
 
-As the data set was highly unbalances which corrupted the t-testing, the data set has been balanced. This mainly included oversampling the male marketed products. However, oversampling causes overestimation of the category it is oversampling which might have lead to overestimation of the male marketed product prices. To overcome this possible issue it is adviced to increase the sample size in future analyses to amke undersampling the majority category possible.
+As the data set was highly unbalances which corrupted the t-testing, the data set has been balanced. This mainly included oversampling the male marketed products. However, oversampling causes overestimation of the category it is oversampling which might have lead to overestimation of the male marketed product prices. To overcome this possible issue, it is advised to increase the sample size in future analyses to make undersampling the majority category possible.
 
-As mentioned in the introduction, the analysis performed above could be greatly improved whne the detection of gender is done using image recognition methods rather than assigning by gender based on the name or descrtiption of the product as the latter often only contain information on gender in the case of male marketed products. However, the design of the product often clearly conveys whether the product is targeted at men or women trough for example the use of colour. Moreover, attributes that contribute to price differences such as the quality have not been included in this analysis. It is possible that the distribution of attributes is different for male and female products which influences the mean price of these products. Furthermore, it is advisable to include a larger number of stores to avoid the impact of store specific differences.
+As mentioned in the introduction, the analysis performed above could be greatly improved when the detection of gender is done using image recognition methods rather than assigning by gender based on the name or description of the product as the latter often only contains information on gender in the case of male marketed products. However, the design of the product often clearly conveys whether the product is targeted at men or women through, for example, the use of colour. Moreover, attributes that contribute to price differences such as the quality have not been included in this analysis. It is possible that the distribution of attributes is different for male and female products which influences the mean price of these products. Furthermore, it is advisable to include a larger number of stores to avoid the impact of store specific differences.
 
 ## Bibliography
 
