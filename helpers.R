@@ -1,6 +1,6 @@
 library(tidyverse)
 
-df <- read_csv("full_data.csv") %>% 
+df <- read_csv("datasets/full_data.csv") %>% 
   drop_na() %>% 
   select(name, avg_price, cat_name, match_subcat, brand, gender_2) %>% 
   group_by(match_subcat, gender_2,cat_name) %>% 
@@ -53,7 +53,9 @@ make_donut <- function(df, subcat, price_male, price_others) {
     labs(title = "Disparity in Product Pricing",
          subtitle = "Highlighting the overcharged amount of gender-based pricing") +
     theme_void() +
-    theme(legend.position = "none") 
+    theme(legend.position = "none",
+          plot.title = element_text(size = 24, face = "bold"),
+          plot.subtitle = element_text(size = 14, color = "gray60")) 
   return(donut)
 }
 
