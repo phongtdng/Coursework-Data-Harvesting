@@ -474,7 +474,7 @@ remDr$server$stop()
 
 ## Clarel
 
-For Clarel website, there is a lot of content hidden through Javascript so we will use Selenium to scrape all the interested content. The setup on my computer was initially troublesome as I wanted to use Chrome as browser. There were a few fix suggestions and the only one that worked for me was to delete the "LISCENSE.chromever" file for the corresponding. However, there was no clear explanation to this fix and the potential issues with deleting the file so we will use Firefox browser for selenium instead.
+For Clarel website, there is a lot of content hidden through Javascript so we will use Selenium to scrape all the interested content. The setup on this computer was initially troublesome as we wanted to use Chrome as browser. There were a few fix suggestions and the only one that worked was to delete the "LISCENSE.chromever" file for the corresponding. However, there was no clear explanation to this fix and the potential issues with deleting the file so we will use Firefox browser for selenium instead.
 
 ### Data Collection
 
@@ -505,7 +505,7 @@ Once we navigate to the home page of Clarel, there is a pop up for cookies so we
 
 #### Scrape Hombre Category
 
-We will start by scraping one category before streamline the scraping process for multiple categories. The structure of the pages of all categories are quite similar so we should not run into many troubles later on if we can scrape one category properly. In this project, I chose to start with "Hombre" category.
+We will start by scraping one category before streamline the scraping process for multiple categories. The structure of the pages of all categories are quite similar so we should not run into many troubles later on if we can scrape one category properly. In this project, we chose to start with "Hombre" category.
 
 ```{r}
 #helper function to get all subcategories of main category input
@@ -542,11 +542,11 @@ sub_cat_2_url <- get_subcat2_url("hombre")
 sub_cat_2_url
 ```
 
-In each main category of products on Clarel, there are also sub-categories and in each of the sub-category sometimes there are sub-section (I will refer to them as product type) the details the product type as well. We would like to get all of this information so later we have more resources to work with for the analysis in case that we need it.
+In each main category of products on Clarel, there are also sub-categories and in each of the sub-category sometimes there are sub-section (they will be referred as product type in this document) with the details the product type as well. We would like to get all of this information so later we have more resources to work with for the analysis in case that we need it.
 
-To do this, first I created a helper function to grab all the URLs to the sub-categories and product types. Another option would have been to navigate to each sub-category and grab the product types but it is more time consuming as we would need to go to multiple product type pages of multiple sub-category pages and the loading time would amass quickly. Therefore, I tried to identify all the URLs from the home page but the trade-off is some cleaning in the process.
+To do this, first a helper function is created to grab all the URLs to the sub-categories and product types. Another option would have been to navigate to each sub-category and grab the product types but it is more time consuming as we would need to go to multiple product type pages of multiple sub-category pages and the loading time would amass quickly. Therefore, we tried to identify all the URLs from the home page but the positive trade-off is some cleaning in the process.
 
-The logic of this function goes like this:
+The logic of this function is of below:
 
 -   The input (parameter) is the main category that we are interested in.
 
@@ -586,7 +586,7 @@ load_all_items <- function() {
 
 Navigating to the URL of the sub-categories and product types gives us a list of products. However, pages have a lot of products and not all are shown on the page. These products are hidden after the "Ver más productos" ("See more products") and we need to repeatedly click on the button until all the products are shown.
 
-Above, I created a function to click the button until the button is gone, meaning that all products have been loaded. There are pauses between each click to wait for the products to load. Since we don't know how many times we have to click the button, we use a `while` loop to click the button until there is no more button to click. When there is no more button, we would get an error if we tried to find the button so we use a `tryCatch()` function to catch and ignore this error.
+Above, we created a function to click the button until the button is gone, meaning that all products have been loaded. There are pauses between each click to wait for the products to load. Since we do not know how many times we have to click the button, we use a `while` loop to click the button until there is no more button to click. When there is no more button, we would get an error if we tried to find the button so we use a `tryCatch()` function to catch and ignore this error.
 
 With this helper function to load all the products, we now can scale and go to all URL, load all the products, and scrape them.
 
@@ -639,7 +639,7 @@ hombre_products <- map_dfr(sub_cat_2_url, get_product_info)
 hombre_products
 ```
 
-Now, we need to get the information of the products. We will similarly create a helper function to streamline the process. The function I created take a URL for input, navigates to that URL, loads all the products using the function created previously, then it gets all the paths (nodes) of the `div` tags containing information about the products. After this, I nested a function to grab the product information from the `div` tags, which at the end returns the data frame of the product information, including brand name, product name, and price. Since categories, sub-categories, and product types are in other elements of the page, I grabbed them separately and append to the data frame to finally create a data frame with brand, product name, price, and full category columns consisting of main category, sub-category, and product type (if any) joined together by "-" (e.g., "Hombre-Afeitado-Después Afeitado").
+Now, we need to get the information of the products. We will similarly create a helper function to streamline the process. The function we created take a URL for input, navigates to that URL, loads all the products using the function created previously, then it gets all the paths (nodes) of the `div` tags containing information about the products. After this, we nested a function to grab the product information from the `div` tags, which at the end returns the data frame of the product information, including brand name, product name, and price. Since categories, sub-categories, and product types are in other elements of the page, we grabbed them separately and append to the data frame to finally create a data frame with brand, product name, price, and full category columns consisting of main category, sub-category, and product type (if any) joined together by "-" (e.g., "Hombre-Afeitado-Después Afeitado").
 
 #### Scrape Multiple Categories
 
@@ -662,11 +662,14 @@ all_products_clarel <- map_dfr(imp_cat ,scrape_all)
 
 #write into csv to avoid scraping every time
 write_csv(all_products_clarel, "datasets/clarel.csv")
+
+#close server
+driver$server$close()
 ```
 
 With the helper functions created before, we have all the tools needed to scrape products from Clarel web page on a large scale (multiple categories). We create a vector with all the interested categories and a function to automate the scraping. This function navigates to the home page of Clarel, then extracts all URLs of sub-categories and product types of the main category input, and finally gets all the product information using the function from the last section to produce a final data frame. We use `map_dfr` to apply the function on the vector of interested categories and create a comprehensive data frame.
 
-At the time of writing this project, it took around 8 minutes to scrape the 4 categories hombre, higiene, cabello, and perfumes. I saved the scraped data into a csv file so for the analysis we would not have to repeat the scrape every time. Furthermore, if there are any changes to the web page and the functions no longer work, the analysis is still reproducible with the csv file.
+At the time of writing this project, it took around 8 minutes to scrape the 4 categories hombre, higiene, cabello, and perfumes. We saved the scraped data into a csv file so for the analysis we would not have to repeat the scrape every time. Furthermore, if there are any changes to the web page and the functions no longer work, the analysis is still reproducible with the csv file.
 
 ### Data Cleaning
 
