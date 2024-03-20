@@ -6,8 +6,19 @@ editor: visual
 
 ## Libraries used
 
+::: {style="font-size:28px"}
+-   [Tidyverse](https://cran.r-project.org/web/packages/tidyverse/index.html): Ecosystem of Packages designed for data science in R (glue, purrr)
+-   [xml2:](https://cran.r-project.org/web/packages/xml2/index.html) R package to handle xml files
+-   [RSelenium](https://cran.r-project.org/web/packages/RSelenium/index.html): R packagefor navigating a website using a driver immitating a regular user.
+-   [httr:](https://cran.r-project.org/web/packages/httr/index.html) Package including tools for working with URLs and HTTP
+-   [ROSE:](https://cran.r-project.org/web/packages/ROSE/index.html) This package contains tools to apply a combination of under- and over-sampling techniques to balance unbalanced data sets
+-   [Broom:](https://cran.r-project.org/web/packages/broom/index.html) Package to convert statistical objects into tidy tibbles
+-   [glue:](https://cran.r-project.org/web/packages/glue/index.html) Package providing tools for easy and efficient string interpolation
+-   [shiny](https://cran.r-project.org/web/packages/shiny/index.html): Package for building web applications and dashboards.
+:::
+
 # Clarel
 
-# Mercadona 
+# Mercadona
 
 # Analysis
