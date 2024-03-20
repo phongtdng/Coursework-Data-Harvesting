@@ -1,0 +1,13 @@
+---
+title: "gendered products"
+format: revealjs
+editor: visual
+---
+
+## Libraries used
+
+# Clarel
+
+# Mercadona 
+
+# Analysis
