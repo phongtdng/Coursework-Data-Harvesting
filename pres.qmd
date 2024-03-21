@@ -122,3 +122,16 @@ Scrape all products
 # Mercadona
 
 # Analysis
+
+# Shiny App
+
+## [Demo](https://phongtduong.shinyapps.io/coursework-data-harvesting/)
+
+![](pres_images/shiny_app.png) 
+
+::: {style="font-size:28px"}
+
+- Bring more awareness
+- Potentially help save money for users
+
+:::
