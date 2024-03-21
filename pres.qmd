@@ -2,6 +2,8 @@
 title: "gendered products"
 format: revealjs
 editor: visual
+execute: 
+  echo: true
 ---
 
 ## Libraries used
@@ -19,6 +21,117 @@ editor: visual
 
 # Clarel
 
+## The trouble with setting up RSelenium {.smaller}
+
+- Did not work with Chrome. There is a "fix" by deleting a "LICENSE.file" in the corresponding chromever directory (works, but not recommended)
+
+![](pres_images/meme_selenium_chrome.jpg){fig-align="center" width=60%}
+
+## The scraping {.smaller}
+
+Navigating to main webpage
+
+```{r}
+#| eval: False 
+clarel_url <- "https://www.clarel.es/es/"
+remDr$navigate(clarel_url)
+Sys.sleep(2)
+#click on a random element to activate the page
+remDr$findElement(using = "xpath", "//div[@class ='header-top-navigation']")$clickElement()
+Sys.sleep(2)
+#Reject cookies
+remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
+```
+
+:::: {.columns}
+
+::: {.column width="30%"}
+<br>
+
+- Navigate to main page
+- Activate page
+- Reject cookies
+:::
+
+::: {.column width="70%"}
+![](pres_images/clarel_main.png){fig-align="center"}
+:::
+
+::::
+
+---
+
+Get all the urls
+
+![](pres_images/clarel_categories.png){fig-align="center"}
+
+--- 
+
+Load all products
+
+::: {.panel-tabset style="font-size:28px"}
+
+### Web
+
+![](pres_images/clarel_load.png){width=80%}
+
+### Code
+
+```{r}
+#| eval: false
+#Load more items helper function
+load_all_items <- function() {
+  Sys.sleep(2)
+  tryCatch(
+    {
+      suppressMessages({
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                          "//button[contains(@class, 'load-more-items-button')]")
+      while(load_more_button$isElementDisplayed()[[1]]) {
+      load_more_button$clickElement()
+      Sys.sleep(2)
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                           "//button[contains(@class, 'load-more-items-button')]")
+      }
+      })
+    },
+    error = function(e){})
+}
+```
+
+:::
+
+---
+
+Scrape all products
+
+:::: {.columns style='display: flex !important; height: 90%;'}
+
+::: {.column width="40%"}
+![](pres_images/clarel_product.png) 
+:::
+
+::: {.column width="60%" style='display: flex; justify-content: center; align-items: center;'}
+- Brand
+- Product name + Quantity
+- Price
+:::
+
+::::
+
 # Mercadona
 
 # Analysis
+
+# Shiny App
+
+## [Demo](https://phongtduong.shinyapps.io/coursework-data-harvesting/)
+
+![](pres_images/shiny_app.png) 
+
+::: {style="font-size:28px"}
+
+- Bring more awareness
+- Potentially help save money for users
+
+:::
