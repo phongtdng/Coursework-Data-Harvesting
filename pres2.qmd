@@ -50,7 +50,7 @@ remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-conse
 :::
 
 ::: {.column width="70%"}
-![](pres_images/clarel_main.png){fig-align="center"}
+![](pres_images/clarel_main.png){fig-align="center" width="80%"}
 :::
 :::
 
@@ -98,9 +98,9 @@ load_all_items <- function() {
 
 Scrape all products
 
-::: {.columns style="display: flex !important; height: 90%;"}
+::: {.columns style="display: flex !important"}
 ::: {.column width="40%"}
-![](pres_images/clarel_product.png)
+![](pres_images/clarel_product.png){width="60%"}
 :::
 
 ::: {.column width="60%" style="display: flex; justify-content: center; align-items: center;"}
@@ -463,5 +463,6 @@ result_sub_sig <- result_sub |>
 -   [glue:](https://cran.r-project.org/web/packages/glue/index.html) Package providing tools for easy and efficient string interpolation
 -   [shiny](https://cran.r-project.org/web/packages/shiny/index.html): Package for building web applications and dashboards.
 
-# 
 :::
+
+# Thank you
