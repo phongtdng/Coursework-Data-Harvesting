@@ -127,7 +127,7 @@ Scrape all products
 :::
 
 ::: {.column width="70%"}
-![](pres_images/M_codigo.png){fig-align="center"}
+![](pres_images/M_codigo_good.png){fig-align="center"}
 :::
 :::
 
