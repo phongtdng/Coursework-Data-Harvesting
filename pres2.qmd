@@ -1,5 +1,5 @@
 ---
-title: "Scraping data on personal health products from Mercadona and Clarel to determine price differences between male and non-male marketed products"
+title: "Scraping data on personal health products"
 format: 
   revealjs:
     theme: moon
@@ -9,14 +9,14 @@ execute:
   echo: true
 ---
 
-# The goal
+# The goals
 
 -   Pink tax
 -   Price differences male and non-male targeted products
 -   Mercadona and Clarel
 -   Dashboard
 
-# The trouble with setting up RSelenium {.smaller}
+# The trouble with RSelenium {.smaller}
 
 -   Did not work with Chrome. There is a "fix" by deleting a "LICENSE.file" in the corresponding chromever directory (works, but not recommended)
 
