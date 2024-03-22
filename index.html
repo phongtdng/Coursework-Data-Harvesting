@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<script src="pres_files/libs/clipboard/clipboard.min.js"></script>
-<script src="pres_files/libs/quarto-html/tabby.min.js"></script>
-<script src="pres_files/libs/quarto-html/popper.min.js"></script>
-<script src="pres_files/libs/quarto-html/tippy.umd.min.js"></script>
-<link href="pres_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="pres_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="pres_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
-<link href="pres_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+<script src="pres2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="pres2_files/libs/quarto-html/tabby.min.js"></script>
+<script src="pres2_files/libs/quarto-html/popper.min.js"></script>
+<script src="pres2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="pres2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="pres2_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="pres2_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
+<link href="pres2_files/libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.3.450">
 
-  <title>gendered products</title>
+  <title>Scraping data on personal health products</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
-  <link rel="stylesheet" href="pres_files/libs/revealjs/dist/reset.css">
-  <link rel="stylesheet" href="pres_files/libs/revealjs/dist/reveal.css">
+  <link rel="stylesheet" href="pres2_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="pres2_files/libs/revealjs/dist/reveal.css">
   <style>
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
@@ -55,50 +55,50 @@
         -khtml-user-select: none; -moz-user-select: none;
         -ms-user-select: none; user-select: none;
         padding: 0 4px; width: 4em;
-        color: #aaaaaa;
       }
-    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
     div.sourceCode
-      { color: #003b4f; background-color: #f1f3f5; }
+      { color: #f8f8f2;  }
     @media screen {
     pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
     }
-    code span { color: #003b4f; } /* Normal */
-    code span.al { color: #ad0000; } /* Alert */
-    code span.an { color: #5e5e5e; } /* Annotation */
-    code span.at { color: #657422; } /* Attribute */
-    code span.bn { color: #ad0000; } /* BaseN */
-    code span.bu { } /* BuiltIn */
-    code span.cf { color: #003b4f; } /* ControlFlow */
-    code span.ch { color: #20794d; } /* Char */
-    code span.cn { color: #8f5902; } /* Constant */
-    code span.co { color: #5e5e5e; } /* Comment */
-    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
-    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
-    code span.dt { color: #ad0000; } /* DataType */
-    code span.dv { color: #ad0000; } /* DecVal */
-    code span.er { color: #ad0000; } /* Error */
-    code span.ex { } /* Extension */
-    code span.fl { color: #ad0000; } /* Float */
-    code span.fu { color: #4758ab; } /* Function */
-    code span.im { color: #00769e; } /* Import */
-    code span.in { color: #5e5e5e; } /* Information */
-    code span.kw { color: #003b4f; } /* Keyword */
-    code span.op { color: #5e5e5e; } /* Operator */
-    code span.ot { color: #003b4f; } /* Other */
-    code span.pp { color: #ad0000; } /* Preprocessor */
-    code span.sc { color: #5e5e5e; } /* SpecialChar */
-    code span.ss { color: #20794d; } /* SpecialString */
-    code span.st { color: #20794d; } /* String */
-    code span.va { color: #111111; } /* Variable */
-    code span.vs { color: #20794d; } /* VerbatimString */
-    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+    code span { color: #f8f8f2; } /* Normal */
+    code span.al { color: #f07178; background-color: #2a0f15; font-weight: bold; } /* Alert */
+    code span.an { color: #d4d0ab; } /* Annotation */
+    code span.at { color: #00e0e0; } /* Attribute */
+    code span.bn { color: #d4d0ab; } /* BaseN */
+    code span.bu { color: #abe338; } /* BuiltIn */
+    code span.cf { color: #ffa07a; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #abe338; } /* Char */
+    code span.cn { color: #ffd700; } /* Constant */
+    code span.co { color: #f8f8f2; font-style: italic; } /* Comment */
+    code span.cv { color: #ffd700; } /* CommentVar */
+    code span.do { color: #f8f8f2; } /* Documentation */
+    code span.dt { color: #ffa07a; } /* DataType */
+    code span.dv { color: #d4d0ab; } /* DecVal */
+    code span.er { color: #f07178; text-decoration: underline; } /* Error */
+    code span.ex { color: #00e0e0; font-weight: bold; } /* Extension */
+    code span.fl { color: #d4d0ab; } /* Float */
+    code span.fu { color: #ffa07a; } /* Function */
+    code span.im { color: #abe338; } /* Import */
+    code span.in { color: #d4d0ab; } /* Information */
+    code span.kw { color: #ffa07a; font-weight: bold; } /* Keyword */
+    code span.op { color: #ffa07a; } /* Operator */
+    code span.ot { color: #00e0e0; } /* Other */
+    code span.pp { color: #dcc6e0; } /* Preprocessor */
+    code span.re { color: #00e0e0; background-color: #f8f8f2; } /* RegionMarker */
+    code span.sc { color: #abe338; } /* SpecialChar */
+    code span.ss { color: #abe338; } /* SpecialString */
+    code span.st { color: #abe338; } /* String */
+    code span.va { color: #00e0e0; } /* Variable */
+    code span.vs { color: #abe338; } /* VerbatimString */
+    code span.wa { color: #dcc6e0; } /* Warning */
   </style>
-  <link rel="stylesheet" href="pres_files/libs/revealjs/dist/theme/quarto.css">
-  <link href="pres_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
-  <link href="pres_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
-  <link href="pres_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
-  <link href="pres_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <link rel="stylesheet" href="pres2_files/libs/revealjs/dist/theme/quarto.css">
+  <link href="pres2_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="pres2_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="pres2_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="pres2_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
   <style type="text/css">
 
   .callout {
@@ -307,6 +307,7 @@
     }
     .reveal .slide:not(.center) {
       height: 100%;
+      overflow-y: auto;
     }
     .reveal .slide.scrollable {
       overflow-y: auto;
@@ -384,44 +385,40 @@
     }
   </style>
 </head>
-<body class="quarto-light">
+<body class="quarto-dark">
   <div class="reveal">
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">gendered products</h1>
+  <h1 class="title">Scraping data on personal health products</h1>
 
 <div class="quarto-title-authors">
 </div>
 
 </section>
-<section id="libraries-used" class="slide level2">
-<h2>Libraries used</h2>
-<div style="font-size:28px">
+<section id="the-goals" class="title-slide slide level1 center">
+<h1>The goals</h1>
 <ul>
-<li><a href="https://cran.r-project.org/web/packages/tidyverse/index.html">Tidyverse</a>: Ecosystem of Packages designed for data science in R (glue, purrr)</li>
-<li><a href="https://cran.r-project.org/web/packages/xml2/index.html">xml2:</a> R package to handle xml files</li>
-<li><a href="https://cran.r-project.org/web/packages/RSelenium/index.html">RSelenium</a>: R packagefor navigating a website using a driver immitating a regular user.</li>
-<li><a href="https://cran.r-project.org/web/packages/httr/index.html">httr:</a> Package including tools for working with URLs and HTTP</li>
-<li><a href="https://cran.r-project.org/web/packages/ROSE/index.html">ROSE:</a> This package contains tools to apply a combination of under- and over-sampling techniques to balance unbalanced data sets</li>
-<li><a href="https://cran.r-project.org/web/packages/broom/index.html">Broom:</a> Package to convert statistical objects into tidy tibbles</li>
-<li><a href="https://cran.r-project.org/web/packages/glue/index.html">glue:</a> Package providing tools for easy and efficient string interpolation</li>
-<li><a href="https://cran.r-project.org/web/packages/shiny/index.html">shiny</a>: Package for building web applications and dashboards.</li>
+<li>Pink tax</li>
+<li>Price differences male and non-male targeted products</li>
+<li>Mercadona and Clarel</li>
+<li>Dashboard</li>
 </ul>
-</div>
 </section>
-<section>
-<section id="clarel" class="title-slide slide level1 center">
-<h1>Clarel</h1>
 
-</section>
-<section id="the-trouble-with-setting-up-rselenium" class="slide level2 smaller">
-<h2>The trouble with setting up RSelenium</h2>
+<section id="the-trouble-with-rselenium" class="title-slide slide level1 smaller center">
+<h1>The trouble with RSelenium</h1>
 <ul>
 <li>Did not work with Chrome. There is a “fix” by deleting a “LICENSE.file” in the corresponding chromever directory (works, but not recommended)</li>
 </ul>
 
 <img data-src="pres_images/meme_selenium_chrome.jpg" style="width:60.0%" class="r-stretch quarto-figure-center"></section>
+
+<section>
+<section id="clarel" class="title-slide slide level1 center">
+<h1>Clarel</h1>
+
+</section>
 <section id="the-scraping" class="slide level2 smaller">
 <h2>The scraping</h2>
 <p>Navigating to main webpage</p>
@@ -446,7 +443,7 @@
 </div><div class="column" style="width:70%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="pres_images/clarel_main.png"></p>
+<p><img data-src="pres_images/clarel_main.png" style="width:80.0%"></p>
 </figure>
 </div>
 </div>
@@ -494,9 +491,9 @@
 <section class="slide level2">
 
 <p>Scrape all products</p>
-<div class="columns" style="display: flex !important; height: 90%;">
+<div class="columns" style="display: flex !important">
 <div class="column" style="width:40%;">
-<p><img data-src="pres_images/clarel_product.png"></p>
+<p><img data-src="pres_images/clarel_product.png" style="width:60.0%"></p>
 </div><div class="column" style="display: flex; justify-content: center; align-items: center;">
 <ul>
 <li>Brand</li>
@@ -506,16 +503,355 @@
 </div>
 </div>
 </section></section>
+<section>
 <section id="mercadona" class="title-slide slide level1 center">
 <h1>Mercadona</h1>
 
 </section>
-
-<section id="analysis" class="title-slide slide level1 center">
-<h1>Analysis</h1>
-
+<section id="the-scraping-1" class="slide level2 smaller">
+<h2>The scraping</h2>
+<div class="panel-tabset" style="font-size:28px">
+<ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">Web</a></li><li><a href="#tabset-2-2">Code</a></li></ul>
+<div class="tab-content" style="font-size:28px">
+<div id="tabset-2-1">
+<div class="columns">
+<div class="column" style="width:30%;">
+<p><br></p>
+<ul>
+<li>Navigate categories page</li>
+<li>Insert postal code</li>
+<li>Accept cookies</li>
+</ul>
+</div><div class="column" style="width:70%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="pres_images/M_codigo_good.png"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-2-2">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="co">#Summarising the function'remDr$client' into 'driver'</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>driver <span class="ot">&lt;-</span> remDr<span class="sc">$</span>client</span>
+<span id="cb3-3"><a href="#cb3-3"></a></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="fu">Sys.sleep</span>(<span class="dv">3</span>)</span>
+<span id="cb3-5"><a href="#cb3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#Accepting cookies</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//button[@class = 'ui-button ui-button--small ui-button--tertiary ui-button--positive'])[1]"</span>)<span class="sc">$</span><span class="fu">clickElement</span>()</span>
+<span id="cb3-8"><a href="#cb3-8"></a></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#Click on text box</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a>driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//input[@class = 'ym-hide-content'])[1]"</span>)<span class="sc">$</span><span class="fu">clickElement</span>()</span>
+<span id="cb3-11"><a href="#cb3-11"></a></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#Define findElement of the textbox</span></span>
+<span id="cb3-13"><a href="#cb3-13"></a>codigo <span class="ot">&lt;-</span>driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//input[@class = 'ym-hide-content'])[1]"</span>)</span>
+<span id="cb3-14"><a href="#cb3-14"></a></span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#Fill in the text box</span></span>
+<span id="cb3-16"><a href="#cb3-16"></a>codigo<span class="sc">$</span><span class="fu">sendKeysToElement</span>(<span class="fu">list</span>(<span class="st">"28014"</span>))</span>
+<span id="cb3-17"><a href="#cb3-17"></a></span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="co">#Click </span></span>
+<span id="cb3-19"><a href="#cb3-19"></a>driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//button[@class = 'button button-primary button-big'])[1]"</span>)<span class="sc">$</span><span class="fu">clickElement</span>()</span>
+<span id="cb3-20"><a href="#cb3-20"></a><span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
 </section>
+<section class="slide level2">
 
+<p>Obtaining Urls</p>
+<div class="panel-tabset" style="font-size:28px">
+<ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">Web</a></li><li><a href="#tabset-3-2">Code</a></li></ul>
+<div class="tab-content" style="font-size:28px">
+<div id="tabset-3-1">
+<div class="columns">
+<div class="column" style="width:30%;">
+<p><br></p>
+<ul>
+<li>Subcategory individual url</li>
+<li>Need to fetch page source code</li>
+</ul>
+</div><div class="column" style="width:70%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="pres_images/M_ver_champu.png"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-3-2">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">#Get URLs 'Cuidado del cabello'</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="co">#Create an empty list to store the URLs </span></span>
+<span id="cb4-3"><a href="#cb4-3"></a>url <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="co">#Navigate to the button 'Cuidado del cabello'</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//label[@class='subhead1-r' and contains(text(), 'Cuidado del cabello')])[1]"</span>)<span class="sc">$</span><span class="fu">clickElement</span>()</span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="co">#Use system sleep to avoid code running faster than the browsing</span></span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#Store the first URL</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a>url[<span class="dv">1</span>] <span class="ot">&lt;-</span>driver<span class="sc">$</span><span class="fu">getCurrentUrl</span>()</span>
+<span id="cb4-10"><a href="#cb4-10"></a></span>
+<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#Create a loop to click on the button at the end of the page to naviagte to the next subcategory and save the url</span></span>
+<span id="cb4-12"><a href="#cb4-12"></a><span class="cf">for</span> (i <span class="cf">in</span> (<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>)){</span>
+<span id="cb4-13"><a href="#cb4-13"></a> </span>
+<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#Find the button at the end of the page and click to navigate to the next subcategory</span></span>
+<span id="cb4-15"><a href="#cb4-15"></a>  driver<span class="sc">$</span><span class="fu">findElement</span>(<span class="at">value =</span> <span class="st">"(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]"</span>)<span class="sc">$</span><span class="fu">clickElement</span>()</span>
+<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#Use system sleep to avoid code running faster than the browsing</span></span>
+<span id="cb4-17"><a href="#cb4-17"></a><span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
+<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#Grab the url and store the url in the url list</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a>url[i] <span class="ot">&lt;-</span>driver<span class="sc">$</span><span class="fu">getCurrentUrl</span>()</span>
+<span id="cb4-20"><a href="#cb4-20"></a>  </span>
+<span id="cb4-21"><a href="#cb4-21"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="slide level2">
+
+<p>Scrape all products</p>
+<div class="panel-tabset" style="font-size:28px">
+<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Web</a></li><li><a href="#tabset-4-2">Code</a></li></ul>
+<div class="tab-content" style="font-size:28px">
+<div id="tabset-4-1">
+<div class="columns">
+<div class="column" style="width:30%;">
+<p><br></p>
+<ul>
+<li>Name</li>
+<li>Type packaging</li>
+<li>Quantity + unit</li>
+<li>Price</li>
+</ul>
+</div><div class="column" style="width:70%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="pres_images/M_bottle.png"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-4-2">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">#Create function</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>cat_grabber <span class="ot">&lt;-</span> <span class="cf">function</span>(url){</span>
+<span id="cb5-3"><a href="#cb5-3"></a>  </span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#Navigate to one of the URLs stored in the variable URL</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a>driver<span class="sc">$</span><span class="fu">navigate</span>(url)</span>
+<span id="cb5-6"><a href="#cb5-6"></a>  </span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="co">#Use system sleep to avoid code running faster than the browsing</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="fu">Sys.sleep</span>(<span class="dv">1</span>)</span>
+<span id="cb5-9"><a href="#cb5-9"></a></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#Get the page source code and read the html</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a>cat_html <span class="ot">&lt;-</span>driver<span class="sc">$</span><span class="fu">getPageSource</span>()[[<span class="dv">1</span>]] <span class="sc">|&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a>  <span class="fu">read_html</span>()</span>
+<span id="cb5-13"><a href="#cb5-13"></a></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#Collect data on products</span></span>
+<span id="cb5-15"><a href="#cb5-15"></a>cat_info <span class="ot">&lt;-</span> cat_html<span class="sc">|&gt;</span> </span>
+<span id="cb5-16"><a href="#cb5-16"></a>    <span class="fu">xml_find_all</span>(<span class="st">"//*[@id='root']//button/div[2]"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-17"><a href="#cb5-17"></a>    <span class="fu">xml_text</span>()</span>
+<span id="cb5-18"><a href="#cb5-18"></a></span>
+<span id="cb5-19"><a href="#cb5-19"></a><span class="co">#Collect the sub category names</span></span>
+<span id="cb5-20"><a href="#cb5-20"></a>subcat_name <span class="ot">&lt;-</span> cat_html <span class="sc">|&gt;</span> </span>
+<span id="cb5-21"><a href="#cb5-21"></a>   <span class="fu">xml_find_all</span>(<span class="st">"//h1[@class='category-detail__title title1-b']"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-22"><a href="#cb5-22"></a>   <span class="fu">xml_text</span>()</span>
+<span id="cb5-23"><a href="#cb5-23"></a></span>
+<span id="cb5-24"><a href="#cb5-24"></a><span class="co">#Clean and separate data using regex</span></span>
+<span id="cb5-25"><a href="#cb5-25"></a>cat_clean<span class="ot">&lt;-</span>cat_info<span class="sc">|&gt;</span> </span>
+<span id="cb5-26"><a href="#cb5-26"></a><span class="co">#Replace all €, /, . or ! signs with an empty space</span></span>
+<span id="cb5-27"><a href="#cb5-27"></a>  <span class="fu">str_replace_all</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">€ |/|</span><span class="sc">\\</span><span class="st">.|!"</span>, <span class="st">""</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-28"><a href="#cb5-28"></a><span class="co">#Replace all € signs followed by 1 or more digits, followed by a comma and again   by one or more digits with an empty space</span></span>
+<span id="cb5-29"><a href="#cb5-29"></a>  <span class="fu">str_replace_all</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">€</span><span class="sc">\\</span><span class="st">d+,</span><span class="sc">\\</span><span class="st">d+"</span>, <span class="st">""</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-30"><a href="#cb5-30"></a><span class="co">#Replace ml with /ml/ when looking backwards finding first an empty space and then a digit</span></span>
+<span id="cb5-31"><a href="#cb5-31"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)ml"</span>, <span class="st">"/ml/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-32"><a href="#cb5-32"></a><span class="co">#Replace ud with /ud/ when looking backwards finding first an empty space  followed by a digit</span></span>
+<span id="cb5-33"><a href="#cb5-33"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)ud"</span>, <span class="st">"/ud/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-34"><a href="#cb5-34"></a><span class="co">#Replace ud with /ud/ when looking backwards finding first 0,1 or 2 empty spaces followed by a digit</span></span>
+<span id="cb5-35"><a href="#cb5-35"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s{0,2})ud"</span>, <span class="st">"/ud/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-36"><a href="#cb5-36"></a><span class="co">#Replace L with /L/ when looking backwards finding first an empty space followed by a digit</span></span>
+<span id="cb5-37"><a href="#cb5-37"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)L"</span>, <span class="st">"/L/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-38"><a href="#cb5-38"></a><span class="co">#Replace 'tarro' with an empty space when looking backwards finding first an empty space followed by a digit</span></span>
+<span id="cb5-39"><a href="#cb5-39"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)tarro"</span>, <span class="st">""</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-40"><a href="#cb5-40"></a><span class="co">#Replace g followed by an empty space with /g/ when looking backwards finding first an empty space followed by a digit</span></span>
+<span id="cb5-41"><a href="#cb5-41"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)g</span><span class="sc">\\</span><span class="st">s"</span>, <span class="st">"/g/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-42"><a href="#cb5-42"></a><span class="co">#Replace g with /g/ when looking backwards finding first an empty space followed by a digit</span></span>
+<span id="cb5-43"><a href="#cb5-43"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)g"</span>, <span class="st">"/g/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-44"><a href="#cb5-44"></a><span class="co">#Replace 'sobres' with /sobres/ when looking backwards finding first an empty space followed by a digit</span></span>
+<span id="cb5-45"><a href="#cb5-45"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)sobres"</span>, <span class="st">"/sobres/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-46"><a href="#cb5-46"></a><span class="co">#Replace 'bandas' with /bandas/ when looking backwards finding first an empty space followed by a digit</span></span>
+<span id="cb5-47"><a href="#cb5-47"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=</span><span class="sc">\\</span><span class="st">d</span><span class="sc">\\</span><span class="st">s)bandas"</span>, <span class="st">"/bandas/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-48"><a href="#cb5-48"></a><span class="co">#Replace '1' with / when looking backwards finding first an empty space followed by the word DovePaquete</span></span>
+<span id="cb5-49"><a href="#cb5-49"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=sensibleCaja</span><span class="sc">\\</span><span class="st">s)1"</span>, <span class="st">"/"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-50"><a href="#cb5-50"></a><span class="co">#Replace '4' with / when looking backwards finding first an empty space followed by the word DovePaquete</span></span>
+<span id="cb5-51"><a href="#cb5-51"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=DovePaquete</span><span class="sc">\\</span><span class="st">s)4"</span>, <span class="st">"/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-52"><a href="#cb5-52"></a><span class="co">#Replace ud. with an empty space when looking foreward finding 0 or more empty spaces followed by ()</span></span>
+<span id="cb5-53"><a href="#cb5-53"></a>  <span class="fu">str_replace_all</span>(<span class="st">"ud.(?=</span><span class="sc">\\</span><span class="st">s*</span><span class="sc">\\</span><span class="st">()"</span>, <span class="st">""</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-54"><a href="#cb5-54"></a><span class="co">#Replace an empty space with an / when looking foreward finding 1 or more digits followed by 0 or more empty spaces and a / </span></span>
+<span id="cb5-55"><a href="#cb5-55"></a>  <span class="fu">str_replace_all</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">s(?=</span><span class="sc">\\</span><span class="st">d+</span><span class="sc">\\</span><span class="st">s*/)"</span>, <span class="st">"/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-56"><a href="#cb5-56"></a><span class="co">#Replace a lower case letter followed by a digit with /</span></span>
+<span id="cb5-57"><a href="#cb5-57"></a>  <span class="fu">str_replace_all</span>(<span class="st">"(?&lt;=[[:lower:]])(?=[[:digit:]])"</span>, <span class="st">"/"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-58"><a href="#cb5-58"></a><span class="co">#Replace a literal ( or a literal ) with an empty space</span></span>
+<span id="cb5-59"><a href="#cb5-59"></a>  <span class="fu">str_replace_all</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">(|</span><span class="sc">\\</span><span class="st">)"</span>, <span class="st">""</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-60"><a href="#cb5-60"></a><span class="co">#Replace all literal . with an empty space</span></span>
+<span id="cb5-61"><a href="#cb5-61"></a>  <span class="fu">str_replace_all</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">."</span>, <span class="st">""</span>)<span class="sc">|&gt;</span> </span>
+<span id="cb5-62"><a href="#cb5-62"></a><span class="co">#Split the strings by /</span></span>
+<span id="cb5-63"><a href="#cb5-63"></a>  <span class="fu">strsplit</span>(<span class="st">"/"</span>)</span>
+<span id="cb5-64"><a href="#cb5-64"></a></span>
+<span id="cb5-65"><a href="#cb5-65"></a></span>
+<span id="cb5-66"><a href="#cb5-66"></a><span class="co">#Only keep the variables with 5 or less strings</span></span>
+<span id="cb5-67"><a href="#cb5-67"></a>cat_clean<span class="ot">&lt;-</span> cat_clean[<span class="fu">lengths</span>(cat_clean) <span class="sc">==</span> <span class="dv">5</span>]</span>
+<span id="cb5-68"><a href="#cb5-68"></a></span>
+<span id="cb5-69"><a href="#cb5-69"></a><span class="co">#Create a dataframe</span></span>
+<span id="cb5-70"><a href="#cb5-70"></a><span class="fu">data.frame</span>(</span>
+<span id="cb5-71"><a href="#cb5-71"></a>  <span class="at">name =</span> <span class="fu">sapply</span>(cat_clean, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="dv">1</span>),</span>
+<span id="cb5-72"><a href="#cb5-72"></a>  <span class="at">quantity =</span> <span class="fu">sapply</span>(cat_clean, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="dv">2</span>),</span>
+<span id="cb5-73"><a href="#cb5-73"></a>  <span class="at">quantity_unit =</span> <span class="fu">sapply</span>(cat_clean, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="dv">3</span>),</span>
+<span id="cb5-74"><a href="#cb5-74"></a>  <span class="at">price =</span> <span class="fu">sapply</span>(cat_clean, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="dv">4</span>),</span>
+<span id="cb5-75"><a href="#cb5-75"></a>  <span class="at">ud =</span>  <span class="fu">sapply</span>(cat_clean, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="dv">5</span>),</span>
+<span id="cb5-76"><a href="#cb5-76"></a>  <span class="at">subcat =</span>  <span class="fu">sapply</span>(subcat_name, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="dv">1</span>),</span>
+<span id="cb5-77"><a href="#cb5-77"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-78"><a href="#cb5-78"></a>)</span>
+<span id="cb5-79"><a href="#cb5-79"></a></span>
+<span id="cb5-80"><a href="#cb5-80"></a></span>
+<span id="cb5-81"><a href="#cb5-81"></a>}</span>
+<span id="cb5-82"><a href="#cb5-82"></a></span>
+<span id="cb5-83"><a href="#cb5-83"></a><span class="fu">cat_grabber</span>(url)</span>
+<span id="cb5-84"><a href="#cb5-84"></a></span>
+<span id="cb5-85"><a href="#cb5-85"></a><span class="co">#Loop thhe function cat_grabber over all URLs</span></span>
+<span id="cb5-86"><a href="#cb5-86"></a>final <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(url, cat_grabber) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="data-cleaning-and-joining" class="slide level2">
+<h2>Data Cleaning and joining</h2>
+<ul>
+<li>Standardizing both data sets</li>
+<li>Bind together</li>
+<li>Data balancing</li>
+</ul>
+</section>
+<section id="analysis" class="slide level2">
+<h2>Analysis</h2>
+<div class="panel-tabset" style="font-size:28px">
+<ul id="tabset-5" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-5-1">Web</a></li><li><a href="#tabset-5-2">Code</a></li></ul>
+<div class="tab-content" style="font-size:28px">
+<div id="tabset-5-1">
+<div class="columns">
+<div class="column" style="width:30%;">
+<p><br></p>
+<ul>
+<li>Mean comparison</li>
+<li>T-test</li>
+<li>Subcategories</li>
+<li>Branded and unbranded</li>
+<li>Male vs Non-Male products</li>
+</ul>
+</div><div class="column" style="width:70%;">
+<p><img data-src="pres_images/pink_bottle.png" data-fig-align="center"> <img data-src="pres_images/pink_package.png" data-fig-align="center"></p>
+</div>
+</div>
+</div>
+<div id="tabset-5-2">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>cat_f <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Champú"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a>quan_f <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ml"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4"></a></span>
+<span id="cb6-5"><a href="#cb6-5"></a>t_test_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(cat_f, quan_f) {</span>
+<span id="cb6-6"><a href="#cb6-6"></a>  cat_d <span class="ot">&lt;-</span> df_balanced <span class="sc">|&gt;</span> </span>
+<span id="cb6-7"><a href="#cb6-7"></a>    <span class="fu">filter</span>(match_subcat <span class="sc">==</span> cat_f <span class="sc">&amp;</span> quantity_unit <span class="sc">==</span> quan_f)</span>
+<span id="cb6-8"><a href="#cb6-8"></a>  </span>
+<span id="cb6-9"><a href="#cb6-9"></a>  prices_male <span class="ot">&lt;-</span> cat_d<span class="sc">$</span>avg_price[cat_d<span class="sc">$</span>gender_2 <span class="sc">==</span> <span class="st">"Male"</span>]</span>
+<span id="cb6-10"><a href="#cb6-10"></a>  prices_non_male <span class="ot">&lt;-</span> cat_d<span class="sc">$</span>avg_price[cat_d<span class="sc">$</span>gender_2 <span class="sc">==</span> <span class="st">"Non-Male"</span>]</span>
+<span id="cb6-11"><a href="#cb6-11"></a>  </span>
+<span id="cb6-12"><a href="#cb6-12"></a>  t_test_result <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a>  </span>
+<span id="cb6-14"><a href="#cb6-14"></a>  <span class="fu">tryCatch</span>({</span>
+<span id="cb6-15"><a href="#cb6-15"></a>    t_test_result <span class="ot">&lt;-</span> <span class="fu">tidy</span>(<span class="fu">t.test</span>(prices_male, prices_non_male))</span>
+<span id="cb6-16"><a href="#cb6-16"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {<span class="cn">NA</span></span>
+<span id="cb6-17"><a href="#cb6-17"></a>    </span>
+<span id="cb6-18"><a href="#cb6-18"></a>  })</span>
+<span id="cb6-19"><a href="#cb6-19"></a>}</span>
+<span id="cb6-20"><a href="#cb6-20"></a></span>
+<span id="cb6-21"><a href="#cb6-21"></a><span class="fu">t_test_fun</span>(cat_f, quan_f)</span>
+<span id="cb6-22"><a href="#cb6-22"></a></span>
+<span id="cb6-23"><a href="#cb6-23"></a>cat_loop<span class="ot">&lt;-</span> df_balanced <span class="sc">|&gt;</span> </span>
+<span id="cb6-24"><a href="#cb6-24"></a>  <span class="fu">distinct</span>(match_subcat)</span>
+<span id="cb6-25"><a href="#cb6-25"></a></span>
+<span id="cb6-26"><a href="#cb6-26"></a>cat_loop <span class="ot">&lt;-</span> <span class="fu">as.list</span>(cat_loop<span class="sc">$</span>match_subcat)</span>
+<span id="cb6-27"><a href="#cb6-27"></a>cat_loop <span class="ot">&lt;-</span> <span class="fu">unlist</span>(cat_loop)</span>
+<span id="cb6-28"><a href="#cb6-28"></a>cat_f <span class="ot">&lt;-</span> <span class="fu">rep</span>(cat_loop, <span class="at">each =</span> <span class="dv">2</span>) </span>
+<span id="cb6-29"><a href="#cb6-29"></a></span>
+<span id="cb6-30"><a href="#cb6-30"></a></span>
+<span id="cb6-31"><a href="#cb6-31"></a>quan_f <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ml"</span>, <span class="st">"ud"</span>)</span>
+<span id="cb6-32"><a href="#cb6-32"></a>quan_f <span class="ot">&lt;-</span> <span class="fu">rep</span>(quan_f, <span class="at">times =</span> <span class="dv">16</span>)</span>
+<span id="cb6-33"><a href="#cb6-33"></a></span>
+<span id="cb6-34"><a href="#cb6-34"></a></span>
+<span id="cb6-35"><a href="#cb6-35"></a>x <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb6-36"><a href="#cb6-36"></a></span>
+<span id="cb6-37"><a href="#cb6-37"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(cat_f)) {</span>
+<span id="cb6-38"><a href="#cb6-38"></a>  result <span class="ot">&lt;-</span> <span class="fu">t_test_fun</span>(cat_f[i], quan_f[i])</span>
+<span id="cb6-39"><a href="#cb6-39"></a>  x[[i]] <span class="ot">&lt;-</span> result</span>
+<span id="cb6-40"><a href="#cb6-40"></a>}</span>
+<span id="cb6-41"><a href="#cb6-41"></a></span>
+<span id="cb6-42"><a href="#cb6-42"></a><span class="co"># Combining the results into a data frame</span></span>
+<span id="cb6-43"><a href="#cb6-43"></a>result_df <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, x)</span>
+<span id="cb6-44"><a href="#cb6-44"></a>result_df<span class="sc">$</span>match_subcat <span class="ot">&lt;-</span> cat_f</span>
+<span id="cb6-45"><a href="#cb6-45"></a>result_df<span class="sc">$</span>quantity_unit <span class="ot">&lt;-</span> quan_f</span>
+<span id="cb6-46"><a href="#cb6-46"></a></span>
+<span id="cb6-47"><a href="#cb6-47"></a>result_sub<span class="ot">&lt;-</span>result_df <span class="sc">|&gt;</span> </span>
+<span id="cb6-48"><a href="#cb6-48"></a>  <span class="fu">select</span>(match_subcat, quantity_unit, <span class="fu">everything</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb6-49"><a href="#cb6-49"></a>   <span class="fu">rename</span>(<span class="at">diff_male_non_male =</span> estimate, </span>
+<span id="cb6-50"><a href="#cb6-50"></a>         <span class="at">male =</span> estimate1, </span>
+<span id="cb6-51"><a href="#cb6-51"></a>         <span class="at">non_male =</span> estimate2,</span>
+<span id="cb6-52"><a href="#cb6-52"></a>         <span class="at">t_statistic =</span> statistic,</span>
+<span id="cb6-53"><a href="#cb6-53"></a>         <span class="at">df =</span> parameter) <span class="sc">|&gt;</span> </span>
+<span id="cb6-54"><a href="#cb6-54"></a>  <span class="fu">mutate</span>(<span class="at">p.value =</span> <span class="fu">round</span>(p.value, <span class="dv">3</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb6-55"><a href="#cb6-55"></a>  <span class="fu">drop_na</span>() </span>
+<span id="cb6-56"><a href="#cb6-56"></a></span>
+<span id="cb6-57"><a href="#cb6-57"></a>result_sub_sig <span class="ot">&lt;-</span> result_sub <span class="sc">|&gt;</span> </span>
+<span id="cb6-58"><a href="#cb6-58"></a>  <span class="fu">filter</span>(p.value <span class="sc">&lt;=</span><span class="fl">0.05</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="results-and-conclusion-analysis" class="slide level2">
+<h2>Results and Conclusion Analysis</h2>
+<div class="panel-tabset" style="font-size:28px">
+<ul id="tabset-6" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-6-1">Main categories</a></li><li><a href="#tabset-6-2">Sub categories</a></li><li><a href="#tabset-6-3">Conclusion</a></li></ul>
+<div class="tab-content" style="font-size:28px">
+<div id="tabset-6-1">
+<ul>
+<li>Male higher prices than non-male</li>
+</ul>
+</div>
+<div id="tabset-6-2">
+<ul>
+<li>Significant results: 3 of the 16 subcategories</li>
+<li>Male higher prices than non-male
+<ul>
+<li>Large differences: skincare products,</li>
+</ul></li>
+<li>Housebrand products: skincare and haircolouring</li>
+<li>Branded products: Male targeted more expensive</li>
+</ul>
+</div>
+<div id="tabset-6-3">
+<ul>
+<li>Male marketed products more expensive than non-male marketed products</li>
+<li>Products typically used more my women, non-male marketed more expensive</li>
+<li>Need image recognition for measuring pink tax</li>
+</ul>
+</div>
+</div>
+</div>
+</section></section>
 <section>
 <section id="shiny-app" class="title-slide slide level1 center">
 <h1>Shiny App</h1>
@@ -530,27 +866,45 @@
 <li>Potentially help save money for users</li>
 </ul>
 </div>
+</section>
+<section id="libraries-used" class="slide level2">
+<h2>Libraries used</h2>
+<div style="font-size:28px">
+<ul>
+<li><a href="https://cran.r-project.org/web/packages/tidyverse/index.html">Tidyverse</a>: Ecosystem of Packages designed for data science in R (glue, purrr)</li>
+<li><a href="https://cran.r-project.org/web/packages/xml2/index.html">xml2:</a> R package to handle xml files</li>
+<li><a href="https://cran.r-project.org/web/packages/RSelenium/index.html">RSelenium</a>: R packagefor navigating a website using a driver immitating a regular user.</li>
+<li><a href="https://cran.r-project.org/web/packages/httr/index.html">httr:</a> Package including tools for working with URLs and HTTP</li>
+<li><a href="https://cran.r-project.org/web/packages/ROSE/index.html">ROSE:</a> This package contains tools to apply a combination of under- and over-sampling techniques to balance unbalanced data sets</li>
+<li><a href="https://cran.r-project.org/web/packages/broom/index.html">Broom:</a> Package to convert statistical objects into tidy tibbles</li>
+<li><a href="https://cran.r-project.org/web/packages/glue/index.html">glue:</a> Package providing tools for easy and efficient string interpolation</li>
+<li><a href="https://cran.r-project.org/web/packages/shiny/index.html">shiny</a>: Package for building web applications and dashboards.</li>
+</ul>
+</div>
+</section></section>
+<section id="thank-you" class="title-slide slide level1 center">
+<h1>Thank you</h1>
 <div class="footer footer-default">
 
 </div>
-</section></section>
+</section>
     </div>
   </div>
 
   <script>window.backupDefine = window.define; window.define = undefined;</script>
-  <script src="pres_files/libs/revealjs/dist/reveal.js"></script>
+  <script src="pres2_files/libs/revealjs/dist/reveal.js"></script>
   <!-- reveal.js plugins -->
-  <script src="pres_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
-  <script src="pres_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
-  <script src="pres_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
-  <script src="pres_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
-  <script src="pres_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/quarto-support/support.js"></script>
   
 
-  <script src="pres_files/libs/revealjs/plugin/notes/notes.js"></script>
-  <script src="pres_files/libs/revealjs/plugin/search/search.js"></script>
-  <script src="pres_files/libs/revealjs/plugin/zoom/zoom.js"></script>
-  <script src="pres_files/libs/revealjs/plugin/math/math.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="pres2_files/libs/revealjs/plugin/math/math.js"></script>
   <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
 
   <script>
