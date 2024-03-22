@@ -1,0 +1,467 @@
+---
+title: "Scraping data on personal health products from Mercadona and Clarel to determine price differences between male and non-male marketed products"
+format: 
+  revealjs:
+    theme: moon
+    scrollable: true
+editor: visual
+execute: 
+  echo: true
+---
+
+# The goal
+
+-   Pink tax
+-   Price differences male and non-male targeted products
+-   Mercadona and Clarel
+-   Dashboard
+
+# The trouble with setting up RSelenium {.smaller}
+
+-   Did not work with Chrome. There is a "fix" by deleting a "LICENSE.file" in the corresponding chromever directory (works, but not recommended)
+
+![](pres_images/meme_selenium_chrome.jpg){fig-align="center" width="60%"}
+
+# Clarel
+
+## The scraping {.smaller}
+
+Navigating to main webpage
+
+```{r}
+#| eval: False 
+clarel_url <- "https://www.clarel.es/es/"
+remDr$navigate(clarel_url)
+Sys.sleep(2)
+#click on a random element to activate the page
+remDr$findElement(using = "xpath", "//div[@class ='header-top-navigation']")$clickElement()
+Sys.sleep(2)
+#Reject cookies
+remDr$findElement(using = "xpath", "//button[contains(@class, 'info_cookie-consent-reject-button')]")$clickElement()
+```
+
+::: columns
+::: {.column width="30%"}
+<br>
+
+-   Navigate to main page
+-   Activate page
+-   Reject cookies
+:::
+
+::: {.column width="70%"}
+![](pres_images/clarel_main.png){fig-align="center"}
+:::
+:::
+
+------------------------------------------------------------------------
+
+Get all the urls
+
+![](pres_images/clarel_categories.png){fig-align="center"}
+
+------------------------------------------------------------------------
+
+Load all products
+
+::: {.panel-tabset style="font-size:28px"}
+### Web
+
+![](pres_images/clarel_load.png){width="80%"}
+
+### Code
+
+```{r}
+#| eval: false
+#Load more items helper function
+load_all_items <- function() {
+  Sys.sleep(2)
+  tryCatch(
+    {
+      suppressMessages({
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                          "//button[contains(@class, 'load-more-items-button')]")
+      while(load_more_button$isElementDisplayed()[[1]]) {
+      load_more_button$clickElement()
+      Sys.sleep(2)
+      load_more_button <-remDr$findElement(using = "xpath", 
+                                           "//button[contains(@class, 'load-more-items-button')]")
+      }
+      })
+    },
+    error = function(e){})
+}
+```
+:::
+
+------------------------------------------------------------------------
+
+Scrape all products
+
+::: {.columns style="display: flex !important; height: 90%;"}
+::: {.column width="40%"}
+![](pres_images/clarel_product.png)
+:::
+
+::: {.column width="60%" style="display: flex; justify-content: center; align-items: center;"}
+-   Brand
+-   Product name + Quantity
+-   Price
+:::
+:::
+
+# Mercadona
+
+## The scraping {.smaller}
+
+::: {.panel-tabset style="font-size:28px"}
+### Web
+
+::: columns
+::: {.column width="30%"}
+<br>
+
+-   Navigate categories page
+-   Insert postal code
+-   Accept cookies
+:::
+
+::: {.column width="70%"}
+![](pres_images/M_codigo.png){fig-align="center"}
+:::
+:::
+
+### Code
+
+```{r}
+#| eval: false
+
+#Summarising the function'remDr$client' into 'driver'
+driver <- remDr$client
+
+Sys.sleep(3)
+
+#Accepting cookies
+driver$findElement(value = "(//button[@class = 'ui-button ui-button--small ui-button--tertiary ui-button--positive'])[1]")$clickElement()
+
+#Click on text box
+driver$findElement(value = "(//input[@class = 'ym-hide-content'])[1]")$clickElement()
+
+#Define findElement of the textbox
+codigo <-driver$findElement(value = "(//input[@class = 'ym-hide-content'])[1]")
+
+#Fill in the text box
+codigo$sendKeysToElement(list("28014"))
+
+#Click 
+driver$findElement(value = "(//button[@class = 'button button-primary button-big'])[1]")$clickElement()
+Sys.sleep(1)
+
+```
+:::
+
+------------------------------------------------------------------------
+
+Obtaining Urls
+
+::: {.panel-tabset style="font-size:28px"}
+### Web
+
+::: columns
+::: {.column width="30%"}
+<br>
+
+-   Subcategory individual url
+-   Need to fetch page source code
+:::
+
+::: {.column width="70%"}
+![](pres_images/M_ver_champu.png){fig-align="center"}
+:::
+:::
+
+### Code
+
+```{r}
+#| eval: False 
+
+#Get URLs 'Cuidado del cabello'
+#Create an empty list to store the URLs 
+url <- list()
+#Navigate to the button 'Cuidado del cabello'
+driver$findElement(value = "(//label[@class='subhead1-r' and contains(text(), 'Cuidado del cabello')])[1]")$clickElement()
+#Use system sleep to avoid code running faster than the browsing
+Sys.sleep(1)
+#Store the first URL
+url[1] <-driver$getCurrentUrl()
+
+#Create a loop to click on the button at the end of the page to naviagte to the next subcategory and save the url
+for (i in (2:4)){
+ 
+#Find the button at the end of the page and click to navigate to the next subcategory
+  driver$findElement(value = "(//button[@class = 'ui-button ui-button--big ui-button--secondary ui-button--positive category-detail__next-subcategory'])[1]")$clickElement()
+#Use system sleep to avoid code running faster than the browsing
+Sys.sleep(1)
+#Grab the url and store the url in the url list
+url[i] <-driver$getCurrentUrl()
+  
+}
+```
+:::
+
+------------------------------------------------------------------------
+
+Scrape all products
+
+::: {.panel-tabset style="font-size:28px"}
+### Web
+
+::: columns
+::: {.column width="30%"}
+<br>
+
+-   Name
+-   Type packaging
+-   Quantity + unit
+-   Price
+:::
+
+::: {.column width="70%"}
+![](pres_images/M_bottle.png){fig-align="center"}
+:::
+:::
+
+### Code
+
+```{r}
+#| eval: false
+
+#Create function
+cat_grabber <- function(url){
+  
+#Navigate to one of the URLs stored in the variable URL
+driver$navigate(url)
+  
+#Use system sleep to avoid code running faster than the browsing
+Sys.sleep(1)
+
+#Get the page source code and read the html
+cat_html <-driver$getPageSource()[[1]] |>
+  read_html()
+
+#Collect data on products
+cat_info <- cat_html|> 
+    xml_find_all("//*[@id='root']//button/div[2]") |>
+    xml_text()
+
+#Collect the sub category names
+subcat_name <- cat_html |> 
+   xml_find_all("//h1[@class='category-detail__title title1-b']") |>
+   xml_text()
+
+#Clean and separate data using regex
+cat_clean<-cat_info|> 
+#Replace all €, /, . or ! signs with an empty space
+  str_replace_all("\\€ |/|\\.|!", "") |> 
+#Replace all € signs followed by 1 or more digits, followed by a comma and again   by one or more digits with an empty space
+  str_replace_all("\\€\\d+,\\d+", "") |>
+#Replace ml with /ml/ when looking backwards finding first an empty space and then a digit
+  str_replace_all("(?<=\\d\\s)ml", "/ml/") |> 
+#Replace ud with /ud/ when looking backwards finding first an empty space  followed by a digit
+  str_replace_all("(?<=\\d\\s)ud", "/ud/") |> 
+#Replace ud with /ud/ when looking backwards finding first 0,1 or 2 empty spaces followed by a digit
+  str_replace_all("(?<=\\d\\s{0,2})ud", "/ud/") |> 
+#Replace L with /L/ when looking backwards finding first an empty space followed by a digit
+  str_replace_all("(?<=\\d\\s)L", "/L/") |> 
+#Replace 'tarro' with an empty space when looking backwards finding first an empty space followed by a digit
+  str_replace_all("(?<=\\d\\s)tarro", "") |> 
+#Replace g followed by an empty space with /g/ when looking backwards finding first an empty space followed by a digit
+  str_replace_all("(?<=\\d\\s)g\\s", "/g/") |> 
+#Replace g with /g/ when looking backwards finding first an empty space followed by a digit
+  str_replace_all("(?<=\\d\\s)g", "/g/") |> 
+#Replace 'sobres' with /sobres/ when looking backwards finding first an empty space followed by a digit
+  str_replace_all("(?<=\\d\\s)sobres", "/sobres/") |> 
+#Replace 'bandas' with /bandas/ when looking backwards finding first an empty space followed by a digit
+  str_replace_all("(?<=\\d\\s)bandas", "/bandas/") |> 
+#Replace '1' with / when looking backwards finding first an empty space followed by the word DovePaquete
+  str_replace_all("(?<=sensibleCaja\\s)1", "/") |>
+#Replace '4' with / when looking backwards finding first an empty space followed by the word DovePaquete
+  str_replace_all("(?<=DovePaquete\\s)4", "/") |> 
+#Replace ud. with an empty space when looking foreward finding 0 or more empty spaces followed by ()
+  str_replace_all("ud.(?=\\s*\\()", "") |> 
+#Replace an empty space with an / when looking foreward finding 1 or more digits followed by 0 or more empty spaces and a / 
+  str_replace_all("\\s(?=\\d+\\s*/)", "/") |> 
+#Replace a lower case letter followed by a digit with /
+  str_replace_all("(?<=[[:lower:]])(?=[[:digit:]])", "/") |> 
+#Replace a literal ( or a literal ) with an empty space
+  str_replace_all("\\(|\\)", "") |> 
+#Replace all literal . with an empty space
+  str_replace_all("\\.", "")|> 
+#Split the strings by /
+  strsplit("/")
+
+
+#Only keep the variables with 5 or less strings
+cat_clean<- cat_clean[lengths(cat_clean) == 5]
+
+#Create a dataframe
+data.frame(
+  name = sapply(cat_clean, `[`, 1),
+  quantity = sapply(cat_clean, `[`, 2),
+  quantity_unit = sapply(cat_clean, `[`, 3),
+  price = sapply(cat_clean, `[`, 4),
+  ud =  sapply(cat_clean, `[`, 5),
+  subcat =  sapply(subcat_name, `[`, 1),
+  stringsAsFactors = FALSE
+)
+
+
+}
+
+cat_grabber(url)
+
+#Loop thhe function cat_grabber over all URLs
+final <- map_dfr(url, cat_grabber) 
+```
+:::
+
+## Data Cleaning and joining
+
+-   Standardizing both data sets
+-   Bind together
+-   Data balancing
+
+## Analysis
+
+::: {.panel-tabset style="font-size:28px"}
+### Web
+
+::: columns
+::: {.column width="30%"}
+<br>
+
+-   Mean comparison
+-   T-test
+-   Subcategories
+-   Branded and unbranded
+-   Male vs Non-Male products
+:::
+
+::: {.column width="70%"}
+![](pres_images/pink_bottle.png){fig-align="center"} ![](pres_images/pink_package.png){fig-align="center"}
+:::
+:::
+
+### Code
+
+```{r}
+#| eval: False 
+
+cat_f <- c("Champú")
+quan_f <- c("ml")
+
+
+t_test_fun <- function(cat_f, quan_f) {
+  cat_d <- df_balanced |> 
+    filter(match_subcat == cat_f & quantity_unit == quan_f)
+  
+  prices_male <- cat_d$avg_price[cat_d$gender_2 == "Male"]
+  prices_non_male <- cat_d$avg_price[cat_d$gender_2 == "Non-Male"]
+  
+  t_test_result <- NULL
+  
+  tryCatch({
+    t_test_result <- tidy(t.test(prices_male, prices_non_male))
+  }, error = function(e) {NA
+    
+  })
+}
+
+t_test_fun(cat_f, quan_f)
+
+cat_loop<- df_balanced |> 
+  distinct(match_subcat)
+
+cat_loop <- as.list(cat_loop$match_subcat)
+cat_loop <- unlist(cat_loop)
+cat_f <- rep(cat_loop, each = 2) 
+
+
+quan_f <- c("ml", "ud")
+quan_f <- rep(quan_f, times = 16)
+
+
+x <- list()
+
+for (i in seq_along(cat_f)) {
+  result <- t_test_fun(cat_f[i], quan_f[i])
+  x[[i]] <- result
+}
+
+# Combining the results into a data frame
+result_df <- do.call(rbind, x)
+result_df$match_subcat <- cat_f
+result_df$quantity_unit <- quan_f
+
+result_sub<-result_df |> 
+  select(match_subcat, quantity_unit, everything()) |> 
+   rename(diff_male_non_male = estimate, 
+         male = estimate1, 
+         non_male = estimate2,
+         t_statistic = statistic,
+         df = parameter) |> 
+  mutate(p.value = round(p.value, 3)) |> 
+  drop_na() 
+
+result_sub_sig <- result_sub |> 
+  filter(p.value <=0.05)
+```
+:::
+
+## Results and Conclusion Analysis
+
+::: {.panel-tabset style="font-size:28px"}
+## Main categories
+
+-   Male higher prices than non-male
+
+## Sub categories
+
+-   Significant results: 3 of the 16 subcategories
+-   Male higher prices than non-male
+    -   Large differences: skincare products,
+-   Housebrand products: skincare and haircolouring
+-   Branded products: Male targeted more expensive
+
+## Conclusion
+
+-   Male marketed products more expensive than non-male marketed products
+-   Products typically used more my women, non-male marketed more expensive
+-   Need image recognition for measuring pink tax
+:::
+
+# Shiny App
+
+## [Demo](https://phongtduong.shinyapps.io/coursework-data-harvesting/)
+
+![](pres_images/shiny_app.png)
+
+::: {style="font-size:28px"}
+-   Bring more awareness
+-   Potentially help save money for users
+:::
+
+## Libraries used
+
+::: {style="font-size:28px"}
+-   [Tidyverse](https://cran.r-project.org/web/packages/tidyverse/index.html): Ecosystem of Packages designed for data science in R (glue, purrr)
+-   [xml2:](https://cran.r-project.org/web/packages/xml2/index.html) R package to handle xml files
+-   [RSelenium](https://cran.r-project.org/web/packages/RSelenium/index.html): R packagefor navigating a website using a driver immitating a regular user.
+-   [httr:](https://cran.r-project.org/web/packages/httr/index.html) Package including tools for working with URLs and HTTP
+-   [ROSE:](https://cran.r-project.org/web/packages/ROSE/index.html) This package contains tools to apply a combination of under- and over-sampling techniques to balance unbalanced data sets
+-   [Broom:](https://cran.r-project.org/web/packages/broom/index.html) Package to convert statistical objects into tidy tibbles
+-   [glue:](https://cran.r-project.org/web/packages/glue/index.html) Package providing tools for easy and efficient string interpolation
+-   [shiny](https://cran.r-project.org/web/packages/shiny/index.html): Package for building web applications and dashboards.
+
+# 
+:::
